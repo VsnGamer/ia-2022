@@ -1,4 +1,5 @@
-from puzzle import BoardState, Color, Piece, Direction
+from puzzle import BoardState, Color, Piece
+
 
 class TreeNode:
     def __init__(self, board: BoardState, parent=None):
@@ -9,9 +10,11 @@ class TreeNode:
         if self.parent is None:
             return 0
         return self.parent.depth() + 1
-# print the path from the root to the node
+
 
 def print_path(node: TreeNode):
+    # print the path from the root to the node
+
     if node is None:
         return
 
@@ -19,32 +22,44 @@ def print_path(node: TreeNode):
     print("Depth: ", node.depth())
     print(node.board)
 
+
 def main():
 
+    # R.R.
+    # BRRB
+    # .BB.
+    # Y..Y
     board1 = BoardState(4, 4, set([
         Piece(Color.RED, set([(0, 0)])),
-        #Piece(Color.RED, set([(3, 0)])),
-        Piece(Color.RED, set([(1, 1), (2, 1),(2, 0)])),
-        
+        # Piece(Color.RED, set([(3, 0)])),
+        Piece(Color.RED, set([(1, 1), (2, 1), (2, 0)])),
+
         Piece(Color.BLUE, set([(0, 1)])),
         Piece(Color.BLUE, set([(3, 1)])),
         Piece(Color.BLUE, set([(1, 2), (2, 2)])),
-        
+
         Piece(Color.YELLOW, set([(0, 3)])),
         Piece(Color.YELLOW, set([(3, 3)])),
     ]))
 
     board = BoardState.from_string(
-    """
-    R..R
+        """
+    R.RR.
     BRRB
-    .BB.
+    GBBBY
     Y..Y
+    """
+    )
+
+    board2 = BoardState.from_string("""
+        R...
+        BR.B
+        ..R.
     """)
 
-    print(board)
-    
-    print_path(bfs(board))
+    #print(board2)
+
+    print_path(bfs(board2))
 
 
 def bfs(board: BoardState):
