@@ -1,4 +1,5 @@
 from enum import Enum
+import random
 
 
 class Direction(Enum):
@@ -16,7 +17,7 @@ class Color(Enum):
     YELLOW = 33
 
 
-def parse_color(char: str):
+def parse_color(char: str) -> Color:
     # parse color from chars R G B Y
 
     if char == 'R':
@@ -48,6 +49,12 @@ class Piece:
     def __init__(self, color: Color, positions: set[(int, int)]):
         self.color = color
         self.positions = positions
+
+    def __eq__(self, other):
+        return self.color == other.color and self.positions == other.positions
+
+    def __hash__(self):
+        return hash((self.color, frozenset(self.positions)))
 
     def overlaps(self, other) -> bool:
         return len(self.positions & other.positions) > 0
@@ -140,6 +147,26 @@ class BoardState:
 
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
+    @staticmethod
+    def generate_random(width, height):
+        
+        pieces = set([])
+
+        # lets fill about 1/2 of the board with pieces
+        for _ in range(width * height // 2):        
+            x = random.randint(0, width - 1)
+            y = random.randint(0, height - 1)
+
+            # if there is already a piece at this position, skip it
+            if get_piece(x, y, pieces) is not None:
+                continue
+
+            color = random.choice(list(Color))
+            piece = Piece(color, set([(x, y)]))
+            pieces.add(piece)
+
+        return BoardState(width, height, merge_same_color_pieces(pieces))
+
     def __init__(self, width, height, pieces: set[Piece]):
         self.width = width
         self.height = height
@@ -225,7 +252,8 @@ class BoardState:
                     result += " "
                 else:
                     # colored text
-                    result += "\033[{};1m{}\033[0m".format(piece.color.value, piece.color.name[0])
+                    result += "\033[{};1m{}\033[0m".format(
+                        piece.color.value, piece.color.name[0])
 
             result += "|\n"
 
@@ -233,3 +261,9 @@ class BoardState:
             str(self.get_num_pieces()) + " pieces\n"
         result += "Win: " + str(self.is_win()) + "\n"
         return result
+
+    def __eq__(self, other):
+        return self.pieces == other.pieces
+
+    def __hash__(self):
+        return hash(frozenset(self.pieces))
