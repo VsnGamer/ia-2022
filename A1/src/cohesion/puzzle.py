@@ -14,8 +14,19 @@ class Color(Enum):
     RED = 31
     GREEN = 32
     BLUE = 34
-    YELLOW = 33
+    # YELLOW = 33
 
+    def get_color_rgb(self):
+        if self == Color.RED:
+            return (255, 0, 0)
+        elif self == Color.GREEN:
+            return (0, 255, 0)
+        elif self == Color.BLUE:
+            return (0, 0, 255)
+        elif self == Color.YELLOW:
+            return (255, 255, 0)
+        else:
+            raise Exception("Invalid color")
 
 def parse_color(char: str) -> Color:
     # parse color from chars R G B Y
@@ -148,12 +159,11 @@ class BoardState:
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
     @staticmethod
-    def generate_random(width, height):
-        
+    def generate_random(width, height, div = 2):
         pieces = set([])
 
         # lets fill about 1/2 of the board with pieces
-        for _ in range(width * height // 2):        
+        for _ in range(width * height // div):        
             x = random.randint(0, width - 1)
             y = random.randint(0, height - 1)
 

@@ -13,13 +13,22 @@ class TreeNode:
         return self.parent.depth() + 1
 
 
+def get_path(node: TreeNode) -> list[TreeNode]:
+    # from root to node
+    path = []
+    while node is not None:
+        path.append(node)
+        node = node.parent
+
+    return path[::-1]
+
 def print_path(node: TreeNode):
     if node is None:
         return
 
     print_path(node.parent)
     print("Depth: ", node.depth())
-    print("Heuristic: ", heuristic(node.board))
+    print("Heuristic: ", pieces_heuristic(node.board))
     print(node.board)
 
 
@@ -57,9 +66,30 @@ def dfs(board: BoardState):
     return None
 
 
-def heuristic(board: BoardState):
+def pieces_heuristic(board: BoardState):
     return board.get_num_pieces() - board.get_num_colors()
 
+def manhattan_distance_heuristic(board: BoardState):
+    # manhattan distance of pieces of the same color
+    result = 0
+    for piece in board.pieces:
+        for other in board.pieces:
+            if piece.color == other.color:
+                distance = board.width * board.height
+
+                # get the smallest distance between the two pieces
+                
+                for x, y in piece.positions:
+                    for other_x, other_y in other.positions:
+                        distance = min(distance, abs(x - other_x) + abs(y - other_y) - 1)
+    
+                result += distance
+
+    return result
+
+# combine pieces_heuristic and manhattan_distance_heuristic
+def pieces_and_distance_heuristic(board: BoardState):
+    return pieces_heuristic(board) + manhattan_distance_heuristic(board)
 
 def greedy_search(board: BoardState, heuristic):
     setattr(TreeNode, "__lt__", lambda self, other: heuristic(
@@ -81,7 +111,7 @@ def greedy_search(board: BoardState, heuristic):
     return None
 
 
-def a_star(board: BoardState, heuristic):
+def a_star(board: BoardState, heuristic, depth_limit=None):
     setattr(TreeNode, "__lt__", lambda self, other: (self.depth() +
             heuristic(self.board)) < (other.depth() + heuristic(other.board)))
     heap = [TreeNode(board)]
@@ -95,7 +125,8 @@ def a_star(board: BoardState, heuristic):
             return node
 
         for child in node.board.children():
-            if child not in visited:
+            if child not in visited and (depth_limit is None or node.depth() + 1 < depth_limit):
                 heapq.heappush(heap, TreeNode(child, node))
 
     return None
+

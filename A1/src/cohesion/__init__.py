@@ -1,35 +1,15 @@
-from puzzle import BoardState, Color, Piece
+from puzzle import BoardState
+from graphics import board_to_sprite, board_properties_text, draw_board
 import search
 import time
+import pygame
 
 
 def main():
 
-    # R.R.
-    # BRRB
-    # .BB.
-    # Y..Y
-    board1 = BoardState(4, 4, set([
-        Piece(Color.RED, set([(0, 0)])),
-        # Piece(Color.RED, set([(3, 0)])),
-        Piece(Color.RED, set([(1, 1), (2, 1), (2, 0)])),
+    pygame.init()
 
-        Piece(Color.BLUE, set([(0, 1)])),
-        Piece(Color.BLUE, set([(3, 1)])),
-        Piece(Color.BLUE, set([(1, 2), (2, 2)])),
-
-        Piece(Color.YELLOW, set([(0, 3)])),
-        Piece(Color.YELLOW, set([(3, 3)])),
-    ]))
-
-    board = BoardState.from_string(
-        """
-    R.RR.
-    BRRB
-    GBBBY
-    Y..Y
-    """
-    )
+    screen = pygame.display.set_mode((800, 600))
 
     board2 = BoardState.from_string("""
         R...
@@ -44,7 +24,36 @@ def main():
     """)
 
     assert board2 == board2_copy
-    assert board != board2
+
+    while True:
+        board = BoardState.generate_random(7, 9)
+        print(board)
+        draw_board(board, screen)
+        pygame.display.flip()
+
+        node = measure_search(lambda: search.a_star(
+            board, search.pieces_and_distance_heuristic), "A*")
+
+        if node is None:
+            print("No solution found")
+            continue
+
+        path = search.get_path(node)
+
+        for node in path:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
+
+            draw_board(node.board, screen)
+              # draw depth text
+            text = pygame.font.SysFont("Arial", 20).render(
+                f"Depth: {node.depth()}", True, (255, 255, 255))
+            screen.blit(text, (0, 60))
+            pygame.display.flip()
+
+            pygame.time.wait(100)
+        pygame.time.wait(2000)
 
     # print(board2)
 
@@ -56,16 +65,19 @@ def main():
 
     # search.print_path(search.a_star(board, search.heuristic))
 
-    board = BoardState.generate_random(4, 4)
-    print(board)
+    # board = BoardState.generate_random(4, 4)
+    # print(board)
 
-    compare_searches(board)
+    # compare_searches(board)
+
 
 def compare_searches(board: BoardState):
     measure_search(lambda: search.bfs(board), "BFS")
     measure_search(lambda: search.dfs(board), "DFS")
-    measure_search(lambda: search.greedy_search(board, search.heuristic), "Greedy")
-    measure_search(lambda: search.a_star(board, search.heuristic), "A*")
+    measure_search(lambda: search.greedy_search(
+        board, search.pieces_heuristic), "Greedy")
+    measure_search(lambda: search.a_star(board, search.pieces_heuristic), "A*")
+
 
 def measure_search(search, name: str):
     start = time.time()
@@ -74,6 +86,9 @@ def measure_search(search, name: str):
     print("Solution @ depth:", node.depth())
     print(node.board)
     print()
+
+    return node
+
 
 if __name__ == "__main__":
     main()
