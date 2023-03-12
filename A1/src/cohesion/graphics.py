@@ -1,7 +1,9 @@
 from puzzle import BoardState
 import pygame
 
-CELL_SIZE = 60
+SCREEN = pygame.display.set_mode((800, 600))
+
+CELL_SIZE = 35
 
 def board_to_sprite(board: BoardState):
     surface = pygame.Surface((board.width * CELL_SIZE, board.height * CELL_SIZE))
@@ -44,3 +46,7 @@ def draw_board(board: BoardState, screen: pygame.Surface):
                 2, screen.get_height()//2 - s.get_height() // 2))
     screen.blit(board_properties_text(board), (0, 0))
 
+def draw_depth(depth: int, screen: pygame.Surface):
+    font = pygame.font.SysFont("Arial", 20)
+    text = font.render(f"Depth: {depth}", True, (255, 255, 255))
+    screen.blit(text, (0, 60))

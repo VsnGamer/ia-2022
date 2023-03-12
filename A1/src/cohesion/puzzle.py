@@ -14,7 +14,7 @@ class Color(Enum):
     RED = 31
     GREEN = 32
     BLUE = 34
-    # YELLOW = 33
+    YELLOW = 33
 
     def get_color_rgb(self):
         if self == Color.RED:
@@ -177,7 +177,7 @@ class BoardState:
 
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
-    def __init__(self, width, height, pieces: set[Piece]):
+    def __init__(self, width: int, height: int, pieces: set[Piece]):
         self.width = width
         self.height = height
         self.pieces = pieces
@@ -277,3 +277,19 @@ class BoardState:
 
     def __hash__(self):
         return hash(frozenset(self.pieces))
+
+# tests
+def test_equal():
+    board2 = BoardState.from_string("""
+        R...
+        BR.B
+        ..R.
+    """)
+
+    board2_copy = BoardState.from_string("""
+        R...
+        BR.B
+        ..R.
+    """)
+
+    assert board2 == board2_copy

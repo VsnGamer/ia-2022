@@ -1,4 +1,6 @@
 import heapq
+import graphics
+import pygame
 from puzzle import BoardState
 
 
@@ -8,9 +10,13 @@ class TreeNode:
         self.parent = parent
 
     def depth(self):
-        if self.parent is None:
-            return 0
-        return self.parent.depth() + 1
+        depth = 0
+        node = self
+        while node is not None:
+            depth += 1
+            node = node.parent
+
+        return depth
 
 
 def get_path(node: TreeNode) -> list[TreeNode]:
@@ -53,8 +59,11 @@ def dfs(board: BoardState):
 
     while stack:
         current = stack.pop()
-
         visited.add(current.board)
+
+        graphics.draw_board(current.board, graphics.SCREEN)
+        graphics.draw_depth(current.depth(), graphics.SCREEN)
+        pygame.display.flip()
 
         if current.board.is_win():
             return current
@@ -78,7 +87,6 @@ def manhattan_distance_heuristic(board: BoardState):
                 distance = board.width * board.height
 
                 # get the smallest distance between the two pieces
-                
                 for x, y in piece.positions:
                     for other_x, other_y in other.positions:
                         distance = min(distance, abs(x - other_x) + abs(y - other_y) - 1)
@@ -88,8 +96,11 @@ def manhattan_distance_heuristic(board: BoardState):
     return result
 
 # combine pieces_heuristic and manhattan_distance_heuristic
-def pieces_and_distance_heuristic(board: BoardState):
-    return pieces_heuristic(board) + manhattan_distance_heuristic(board)
+def pieces_and_distance_heuristic(manhattan_weight=1):
+    def heuristic(board: BoardState):
+        return pieces_heuristic(board) + manhattan_distance_heuristic(board) * manhattan_weight
+    
+    return heuristic
 
 def greedy_search(board: BoardState, heuristic):
     setattr(TreeNode, "__lt__", lambda self, other: heuristic(
@@ -101,6 +112,10 @@ def greedy_search(board: BoardState, heuristic):
         node = heapq.heappop(heap)
         visited.add(node.board)
 
+        graphics.draw_board(node.board, graphics.SCREEN)
+        graphics.draw_depth(node.depth(), graphics.SCREEN)
+        pygame.display.flip()
+
         if node.board.is_win():
             return node
 
@@ -111,15 +126,19 @@ def greedy_search(board: BoardState, heuristic):
     return None
 
 
-def a_star(board: BoardState, heuristic, depth_limit=None):
-    setattr(TreeNode, "__lt__", lambda self, other: (self.depth() +
-            heuristic(self.board)) < (other.depth() + heuristic(other.board)))
+def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
+    setattr(TreeNode, "__lt__", lambda self, other: self.depth() +
+            heuristic(self.board) * weight < other.depth() + heuristic(other.board) * weight)
     heap = [TreeNode(board)]
     visited = set()  # to not visit the same state twice
 
     while heap:
         node = heapq.heappop(heap)
         visited.add(node.board)
+
+        graphics.draw_board(node.board, graphics.SCREEN)
+        graphics.draw_depth(node.depth(), graphics.SCREEN)
+        pygame.display.flip()
 
         if node.board.is_win():
             return node
@@ -129,4 +148,3 @@ def a_star(board: BoardState, heuristic, depth_limit=None):
                 heapq.heappush(heap, TreeNode(child, node))
 
     return None
-
