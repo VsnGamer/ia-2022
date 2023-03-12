@@ -4,6 +4,7 @@ import search
 import time
 import pygame
 
+
 hard_1 = BoardState.from_string("""
         BB.G
         RRR.
@@ -24,12 +25,24 @@ hard_3 = BoardState.from_string("""
         .RR.
         BRBG
 """)
-                
-         
+
+hard_big_1 = BoardState.from_string("""
+RR  R        Y     .
+.  Y            R  .
+.   G Y B  R G Y   .
+.   G           R R.
+.Y             GR  .
+.                 YY
+.     B   B     R  Y
+R      RY  R  B R  .
+.          R G     .
+.   RBB   Y        .
+""")
+
+
 def main():
 
     pygame.init()
-
 
     # board = hard_1
     # print(board)
@@ -37,8 +50,8 @@ def main():
     # return
 
     while True:
-        # board = hard_3
-        board = BoardState.generate_random(20, 10, div=4)
+        # board = hard_1
+        board = BoardState.generate_random(20, 10, div=3)
         print(board)
 
         draw_board(board, SCREEN)
@@ -48,36 +61,45 @@ def main():
         # node = measure_search(lambda: search.greedy_search(board, search.pieces_and_distance_heuristic), "Greedy")
         # node = measure_search(lambda: search.a_star(
         #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
-        node = measure_search(lambda: search.greedy_search(
-            board, search.pieces_and_distance_heuristic(.1)), "Greedy (Pieces + Distance)")
+
+        manhattan_weight = 3
+        touching_weight = .8
+        a_star_weight = 2
+        node = measure_search(lambda: search.a_star(
+            board, search.pieces_distance_touching_heuristic(pieces_weight=1,manhattan_weight=manhattan_weight, touching_weight=touching_weight), weight=a_star_weight), "A* (Pieces + Distance + Touching)")
 
         if node is None:
             print("No solution found")
             continue
 
-        path = search.get_path(node)
+        # draw_path(search.get_path(node))
 
-        for node in path:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    return
+        pygame.time.wait(2000)
 
-            draw_board(node.board, SCREEN)
-            # draw depth text
-            text = pygame.font.SysFont("Arial", 20).render(
-                f"Depth: {node.depth()}", True, (255, 255, 255))
-            SCREEN.blit(text, (0, 60))
-            pygame.display.flip()
 
-            pygame.time.wait(10)
-        pygame.time.wait(1000)
+def draw_path(path: list[search.TreeNode]):
+    for node in path:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+
+        draw_board(node.board, SCREEN)
+        # draw depth text
+        text = pygame.font.SysFont("Arial", 20).render(
+            f"Depth: {node.depth()}", True, (255, 255, 255))
+        SCREEN.blit(text, (0, 60))
+        pygame.display.flip()
+
+        pygame.time.wait(10)
 
 
 def compare_searches(board: BoardState):
     measure_search(lambda: search.bfs(board), "BFS")
     measure_search(lambda: search.dfs(board), "DFS")
-    measure_search(lambda: search.greedy_search(board, search.pieces_heuristic), "Greedy")
-    measure_search(lambda: search.a_star(board, search.pieces_heuristic), "A* (Pieces)")
+    measure_search(lambda: search.greedy_search(
+        board, search.pieces_heuristic), "Greedy")
+    measure_search(lambda: search.a_star(
+        board, search.pieces_heuristic), "A* (Pieces)")
     measure_search(lambda: search.a_star(
         board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
     measure_search(lambda: search.a_star(board, search.pieces_and_distance_heuristic,

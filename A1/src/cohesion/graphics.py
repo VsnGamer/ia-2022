@@ -37,6 +37,7 @@ def board_properties_text(board: BoardState):
     return surface
 
 def draw_board(board: BoardState, screen: pygame.Surface):
+    pygame.event.pump()
     screen.fill((0, 0, 0))
 
     s = board_to_sprite(board)
@@ -50,3 +51,8 @@ def draw_depth(depth: int, screen: pygame.Surface):
     font = pygame.font.SysFont("Arial", 20)
     text = font.render(f"Depth: {depth}", True, (255, 255, 255))
     screen.blit(text, (0, 60))
+
+def draw_heuristic(heuristic: int, screen: pygame.Surface):
+    font = pygame.font.SysFont("Arial", 20)
+    text = font.render(f"Heuristic: {heuristic}", True, (255, 255, 255))
+    screen.blit(text, (0, 80))

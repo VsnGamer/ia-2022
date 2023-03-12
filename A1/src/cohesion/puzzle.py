@@ -86,6 +86,20 @@ class Piece:
             new_positions.add(get_position_in_direction(x, y, direction))
 
         return Piece(self.color, new_positions)
+    
+    def uniformity(self) -> float:
+        # returns a number between 0 and 1, 0 being completely uniform and 1 being completely non-uniform
+        # uniformity is defined as the ratio of the number of positions in the piece to the number of positions in a square bounding box
+
+        min_x = min([x for x, y in self.positions])
+        max_x = max([x for x, y in self.positions])
+        min_y = min([y for x, y in self.positions])
+        max_y = max([y for x, y in self.positions])
+
+        # get largest side to make a square bounding box
+        side = max(max_x - min_x, max_y - min_y) + 1
+
+        return len(self.positions) / (side * side)
 
 
 def merge_same_color_pieces(pieces: set[Piece]):
@@ -151,7 +165,7 @@ class BoardState:
         pieces = set([])
         for y, line in enumerate(lines):
             for x, char in enumerate(line):
-                if char != '.':
+                if char != '.' and char != ' ':
                     color = parse_color(char)
                     piece = Piece(color, set([(x, y)]))
                     pieces.add(piece)
@@ -177,12 +191,12 @@ class BoardState:
 
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
-    def __init__(self, width: int, height: int, pieces: set[Piece]):
+    def __init__(self, width: int, height: int, pieces: set[Piece], check_valid = True):
         self.width = width
         self.height = height
         self.pieces = pieces
 
-        if not self.is_valid():
+        if check_valid and not self.is_valid():
             raise Exception("Invalid board state")
 
     def get_piece(self, x, y):
@@ -196,6 +210,9 @@ class BoardState:
 
     def get_num_pieces(self):
         return len(self.pieces)
+    
+    def num_piece_cells(self):
+        return sum([len(piece.positions) for piece in self.pieces])
 
     def is_win(self):
         return self.get_num_pieces() == self.get_num_colors()
@@ -212,7 +229,7 @@ class BoardState:
         if any_overlaps(new_pieces):
             return None
 
-        return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces))
+        return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces), check_valid = False)
 
     def children(self):
         result = []
@@ -253,9 +270,8 @@ class BoardState:
         return True
 
     def __str__(self):
-        result = ""
+        result = "-" * (self.width) + "\n"
         for y in range(self.height):
-            result += "|"
             for x in range(self.width):
                 piece = self.get_piece(x, y)
                 if piece is None:
@@ -265,10 +281,12 @@ class BoardState:
                     result += "\033[{};1m{}\033[0m".format(
                         piece.color.value, piece.color.name[0])
 
-            result += "|\n"
+            result += "\n"
+        result += "-" * (self.width) + "\n"
 
         result += str(self.get_num_colors()) + " colors, " + \
-            str(self.get_num_pieces()) + " pieces\n"
+            str(self.get_num_pieces()) + " pieces, " + \
+            str(self.num_piece_cells()) + " cells\n"
         result += "Win: " + str(self.is_win()) + "\n"
         return result
 
