@@ -50,8 +50,8 @@ def main():
     # return
 
     while True:
-        board = hard_1
-        # board = BoardState.generate_random(20, 10, div=5)
+        # board = hard_big_1
+        board = BoardState.generate_random(20, 10, div=3)
         print(board)
 
         draw_board(board, SCREEN)
@@ -62,18 +62,17 @@ def main():
         # node = measure_search(lambda: search.a_star(
         #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
 
-        heuristic = search.pieces_and_distance_heuristic(manhattan_weight=.5)
-        manhattan_weight = 1.6
-        touching_weight = .3
-        a_star_weight = 1
-        node = measure_search(lambda: search.a_star(
-            board, heuristic), "A* (Pieces + Distance + Touching)")
+        manhattan_weight = 1
+        touching_weight = .5
+        heuristic = search.pieces_and_distance_heuristic(manhattan_weight)
+        a_star_weight = 1.8
+        node = measure_search(lambda: search.dfs(board), "DFS")
 
         if node is None:
             print("No solution found")
             continue
 
-        draw_path(search.get_path(node), heuristic=heuristic)
+        # draw_path(search.get_path(node), heuristic=heuristic)
 
         pygame.time.wait(3000)
 

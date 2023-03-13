@@ -1,5 +1,6 @@
 from enum import Enum
 import random
+from typing import Optional
 
 
 class Direction(Enum):
@@ -27,6 +28,7 @@ class Color(Enum):
             return (255, 255, 0)
         else:
             raise Exception("Invalid color")
+
 
 def parse_color(char: str) -> Color:
     # parse color from chars R G B Y
@@ -86,7 +88,7 @@ class Piece:
             new_positions.add(get_position_in_direction(x, y, direction))
 
         return Piece(self.color, new_positions)
-    
+
     def uniformity(self) -> float:
         # returns a number between 0 and 1, 0 being completely uniform and 1 being completely non-uniform
         # uniformity is defined as the ratio of the number of positions in the piece to the number of positions in a square bounding box
@@ -97,7 +99,7 @@ class Piece:
         max_y = max([y for x, y in self.positions])
 
         # get largest side to make a square bounding box
-        side = max(max_x - min_x, max_y - min_y) + 1
+        side = max(max_x - min_x + 1, max_y - min_y + 1)
 
         return len(self.positions) / (side * side)
 
@@ -140,7 +142,7 @@ def any_overlaps(pieces: set[Piece]):
     return False
 
 
-def get_piece(x, y, pieces: set[Piece]):
+def get_piece(x, y, pieces: set[Piece]) -> Optional[Piece]:
     result = [piece for piece in pieces if (x, y) in piece.positions]
 
     if len(result) == 0:
@@ -173,11 +175,11 @@ class BoardState:
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
     @staticmethod
-    def generate_random(width, height, div = 2):
+    def generate_random(width, height, div=2):
         pieces = set([])
 
         # lets fill about 1/2 of the board with pieces
-        for _ in range(width * height // div):        
+        for _ in range(width * height // div):
             x = random.randint(0, width - 1)
             y = random.randint(0, height - 1)
 
@@ -191,7 +193,7 @@ class BoardState:
 
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
-    def __init__(self, width: int, height: int, pieces: set[Piece], check_valid = True):
+    def __init__(self, width: int, height: int, pieces: set[Piece], check_valid=True):
         self.width = width
         self.height = height
         self.pieces = pieces
@@ -210,7 +212,7 @@ class BoardState:
 
     def get_num_pieces(self):
         return len(self.pieces)
-    
+
     def num_piece_cells(self):
         return sum([len(piece.positions) for piece in self.pieces])
 
@@ -229,7 +231,7 @@ class BoardState:
         if any_overlaps(new_pieces):
             return None
 
-        return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces), check_valid = False)
+        return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces), check_valid=False)
 
     def children(self):
         result = []
@@ -262,7 +264,7 @@ class BoardState:
             for x, y in piece.positions:
                 for direction in Direction:
                     pos = get_position_in_direction(x, y, direction)
-                    other_piece = get_piece(pos[0], pos[1], self.pieces)
+                    other_piece = self.get_piece(*pos)
                     if pos not in piece.positions and other_piece is not None and other_piece.color == piece.color:
                         print("Pieces not connected at ({}, {})".format(x, y))
                         return False
@@ -297,6 +299,8 @@ class BoardState:
         return hash(frozenset(self.pieces))
 
 # tests
+
+
 def test_equal():
     board2 = BoardState.from_string("""
         R...

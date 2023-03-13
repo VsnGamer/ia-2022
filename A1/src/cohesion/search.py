@@ -64,15 +64,15 @@ def dfs(board: BoardState):
         current = stack.pop()
         visited.add(current.board)
 
-        graphics.draw_board(current.board, graphics.SCREEN)
-        graphics.draw_depth(current.depth(), graphics.SCREEN)
-        pygame.display.flip()
+        if SHOW_SEARCH:
+            draw_search_debug(current, visited)
 
         if current.board.is_win():
             return current
 
         for neighbour in current.board.children():
             if neighbour not in visited:
+                visited.add(neighbour)
                 stack.append(TreeNode(neighbour, current))
 
     return None
@@ -152,11 +152,13 @@ def same_color_attract_different_color_repel(same_color_weight=1, different_colo
 
     return heuristic
 
+
 def piece_uniformity_heuristic(multiplier=1):
     def heuristic(board: BoardState):
         return sum([piece.uniformity() * multiplier for piece in board.pieces])
-    
+
     return heuristic
+
 
 def greedy_search(board: BoardState, heuristic):
     setattr(TreeNode, "__lt__", lambda self, other: heuristic(
@@ -185,6 +187,7 @@ def greedy_search(board: BoardState, heuristic):
 def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
     setattr(TreeNode, "__lt__", lambda self, other: self.depth() +
             heuristic(self.board) * weight < other.depth() + heuristic(other.board) * weight)
+
     heap = [TreeNode(board)]
     visited = set()  # to not visit the same state twice
 
@@ -193,16 +196,28 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
         visited.add(node.board)
 
         if SHOW_SEARCH:
-            graphics.draw_board(node.board, graphics.SCREEN)
-            graphics.draw_depth(node.depth(), graphics.SCREEN)
-            graphics.draw_heuristic(heuristic(node.board), graphics.SCREEN)
-            pygame.display.flip()
+            draw_search_debug(node, visited, heuristic)
 
         if node.board.is_win():
             return node
 
         for child in node.board.children():
             if child not in visited and (depth_limit is None or node.depth() + 1 < depth_limit):
-                heapq.heappush(heap, TreeNode(child, node))
+                # WARN: this probably makes the algorithm not optimal but it's faster
+                visited.add(child)
+                heapq.heappush(heap, TreeNode(child, parent=node))
 
     return None
+
+
+def draw_search_debug(node: TreeNode, visited, heuristic=None):
+    graphics.draw_board(node.board, graphics.SCREEN)
+    graphics.draw_text("Depth: " + str(node.depth()),
+                       graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 0))
+
+    if heuristic is not None:
+        graphics.draw_text("Heuristic: " + str(heuristic(node.board)),
+                           graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 20))
+    graphics.draw_text("Visited: " + str(len(visited)),
+                       graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 40))
+    pygame.display.flip()
