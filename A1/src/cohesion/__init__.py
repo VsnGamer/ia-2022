@@ -3,6 +3,7 @@ from graphics import draw_board, SCREEN
 import search
 import time
 import pygame
+import play
 
 
 hard_1 = BoardState.from_string("""
@@ -41,40 +42,36 @@ R      RY  R  B R  .
 
 
 def main():
-
     pygame.init()
+    play.start()
 
-    # board = hard_1
-    # print(board)
-    # compare_searches(board)
-    # return
-
+def solve_demo():
     while True:
-        # board = hard_big_1
-        board = BoardState.generate_random(20, 10, div=3)
-        print(board)
+        solve(BoardState.generate_random(10, 10, div=5))
 
-        draw_board(board, SCREEN)
-        pygame.display.flip()
+def solve(board: BoardState):
+    print(board)
 
-        # node = measure_search(lambda: search.bfs(board), "BFS")
-        # node = measure_search(lambda: search.greedy_search(board,  search.pieces_and_distance_heuristic), "Greedy")
-        # node = measure_search(lambda: search.a_star(
-        #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
+    draw_board(board, SCREEN)
+    pygame.display.flip()
 
-        manhattan_weight = 1
-        touching_weight = .5
-        heuristic = search.pieces_and_distance_heuristic(manhattan_weight)
-        a_star_weight = 1.8
-        node = measure_search(lambda: search.dfs(board), "DFS")
+    # node = measure_search(lambda: search.bfs(board), "BFS")
+    # node = measure_search(lambda: search.greedy_search(board,  search.pieces_and_distance_heuristic), "Greedy")
+    # node = measure_search(lambda: search.a_star(
+    #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
 
-        if node is None:
-            print("No solution found")
-            continue
+    manhattan_weight = 1
+    touching_weight = .5
+    heuristic = search.pieces_and_distance_heuristic(manhattan_weight)
+    a_star_weight = 1.8
+    node = measure_search(lambda: search.dfs(board), "DFS")
 
-        # draw_path(search.get_path(node), heuristic=heuristic)
+    if node is None:
+        print("No solution found")
+        return
 
-        pygame.time.wait(3000)
+    # draw_path(search.get_path(node), heuristic=heuristic)
+    pygame.time.wait(3000)
 
 
 def draw_path(path: list[search.TreeNode], delay=250, heuristic=None):

@@ -57,6 +57,18 @@ def get_position_in_direction(x, y, direction: Direction):
     else:
         raise Exception("Invalid direction")
 
+def shift(pos, direction: Direction, amount=1):
+    x, y = pos
+    if direction == Direction.UP:
+        return (x, y - amount)
+    elif direction == Direction.DOWN:
+        return (x, y + amount)
+    elif direction == Direction.LEFT:
+        return (x - amount, y)
+    elif direction == Direction.RIGHT:
+        return (x + amount, y)
+    else:
+        raise Exception("Invalid direction")
 
 class Piece:
     def __init__(self, color: Color, positions: set[(int, int)]):
@@ -222,7 +234,7 @@ class BoardState:
     def is_in_bounds(self, piece: Piece) -> bool:
         return all([self.is_valid_position(x, y) for x, y in piece.positions])
 
-    def move_piece(self, piece: Piece, direction: Direction):
+    def move_piece(self, piece: Piece, direction: Direction) -> Optional['BoardState']:
         new_piece = piece.move(direction)
         if not self.is_in_bounds(new_piece):
             return None

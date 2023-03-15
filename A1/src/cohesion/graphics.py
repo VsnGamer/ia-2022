@@ -2,27 +2,34 @@ from puzzle import BoardState
 import pygame
 
 SCREEN = pygame.display.set_mode((800, 600))
+X_MARGIN = 120
+Y_MARGIN = 60
 
-CELL_SIZE = 35
+#CELL_SIZE = 35
 
+def cell_size(board: BoardState):
+    return min((SCREEN.get_width() - X_MARGIN) // board.width, (SCREEN.get_height() - Y_MARGIN) // board.height)
 
 def board_to_sprite(board: BoardState):
+    cs = cell_size(board)
     surface = pygame.Surface(
-        (board.width * CELL_SIZE, board.height * CELL_SIZE))
+        (board.width * cs, board.height * cs))
     draw_board_surface(board, surface)
     return surface
 
 
 def draw_board_surface(board: BoardState, surface: pygame.Surface):
+    cs = cell_size(board)
+
     surface.fill((0, 0, 0))
     for piece in board.pieces:
         for x, y in piece.positions:
             pygame.draw.rect(surface, piece.color.get_color_rgb(
-            ), (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            ), (x * cs, y * cs, cs, cs))
     for x in range(board.width):
         for y in range(board.height):
             pygame.draw.rect(surface, (255, 255, 255), (x *
-                             CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE), 1)
+                             cs, y * cs, cs, cs), 1)
 
 
 def board_properties_text(board: BoardState):
@@ -53,8 +60,9 @@ def draw_board(board: BoardState, screen: pygame.Surface):
     s = board_to_sprite(board)
 
     # draw the board at the center of the screen
-    screen.blit(s, (screen.get_width() // 2 - s.get_width() //
-                2, screen.get_height()//2 - s.get_height() // 2))
+    # screen.blit(s, (screen.get_width() // 2 - s.get_width() //
+    #             2, screen.get_height()//2 - s.get_height() // 2))
+    screen.blit(s, (X_MARGIN, Y_MARGIN))
     screen.blit(board_properties_text(board), (0, 0))
 
 
@@ -62,3 +70,12 @@ def draw_text(text: str, screen: pygame.Surface, dest):
     font = pygame.font.SysFont("Arial", 20)
     text = font.render(text, True, (255, 255, 255))
     screen.blit(text, dest)
+
+def mouse_to_board(board: BoardState, mouse_pos):
+    cs = cell_size(board)
+    x, y = mouse_pos
+    return (x - X_MARGIN) // cs, (y - Y_MARGIN) // cs
+
+def board_to_screen(board: BoardState, x, y):
+    cs = cell_size(board)
+    return x * cs + X_MARGIN, y * cs + Y_MARGIN
