@@ -38,12 +38,12 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     self.handle_key(event)
 
-            if self.paused:
-                continue
-
             draw_board(self.board, SCREEN)
             self.draw_selected_piece_border()
             pygame.display.update()
+
+            if self.paused:
+                continue
 
             if self.board.is_win():
                 self.handle_win()
@@ -54,7 +54,7 @@ class Game:
         self.selected_piece = None
         self.selected_position = None
         self.paused = True
-        self.board = BoardState.generate_random(5, 5, div=2)
+        self.board = BoardState.generate_random(self.board.width, self.board.height, div=2)
 
     def draw_selected_piece_border(self):
         if self.selected_piece is None:

@@ -128,10 +128,10 @@ class Piece:
 
         largest_side = max(width, height)
 
-        if abs(width - height) > 1:
-            return largest_side * largest_side - len(self.positions)
-        else:
-            return largest_side * largest_side - len(self.positions) / 2
+        if abs(width - height) <= 1 and len(self.positions) == largest_side * largest_side:
+            return 0
+
+        return largest_side * largest_side - len(self.positions)
 
 
 def merge_same_color_pieces(pieces: set[Piece]):
@@ -345,7 +345,10 @@ class BoardState:
 
         result += str(self.get_num_colors()) + " colors, " + \
             str(self.get_num_pieces()) + " pieces, " + \
-            str(self.num_piece_cells()) + " cells\n"
+            str(self.num_piece_cells()) + " cells"
+        
+        percent_filled = self.num_piece_cells() / (self.width * self.height) * 100
+        result += " ({:.2f}%)".format(percent_filled)
         result += "Win: " + str(self.is_win()) + "\n"
         return result
 

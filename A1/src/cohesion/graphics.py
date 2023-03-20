@@ -1,7 +1,7 @@
 from puzzle import BoardState
 import pygame
 
-SCREEN = pygame.display.set_mode((800, 600))
+SCREEN = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
 X_MARGIN = 120
 Y_MARGIN = 80
 

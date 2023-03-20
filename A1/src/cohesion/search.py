@@ -116,8 +116,7 @@ def manhattan_distance_heuristic(board: BoardState, same_color=True):
 
 
 def touching_pieces(board: BoardState):
-    # number of pieces that are touching each other
-    # this is a negative heuristic because we want to minimize the number of touching pieces of different colors
+    # number of pieces that are touching each other (different color)
     result = 0
     for piece in board.pieces:
         for other in board.pieces:
@@ -129,44 +128,17 @@ def touching_pieces(board: BoardState):
 
     return result
 
-# combine pieces_heuristic and manhattan_distance_heuristic
-
-
-def pieces_and_distance_heuristic(manhattan_weight=1):
-    def heuristic(board: BoardState):
-        return pieces_heuristic(board) + manhattan_distance_heuristic(board) * manhattan_weight
-
-    return heuristic
-
-
-def pieces_distance_touching_heuristic(pieces_weight=10, manhattan_weight=1, touching_weight=1):
-    def heuristic(board: BoardState):
-        return pieces_heuristic(board) * pieces_weight + manhattan_distance_heuristic(board) * manhattan_weight + touching_pieces(board) * touching_weight
-
-    return heuristic
-
-
-def same_color_attract_different_color_repel(same_color_weight=1, different_color_weight=1, pieces_weight=2):
-    def heuristic(board: BoardState):
-        return pieces_heuristic(board) * pieces_weight + manhattan_distance_heuristic(board, same_color=True) * same_color_weight - manhattan_distance_heuristic(board, same_color=False) * different_color_weight
-
-    return heuristic
-
 
 def piece_uniformity_heuristic(board: BoardState):
     return sum([piece.uniformity2() for piece in board.pieces])
 
-def pieces_distance_uniformity_heuristic(pieces_weight=1, manhattan_weight=1, uniformity_weight=1):
-    def heuristic(board: BoardState):
-        return pieces_heuristic(board) * pieces_weight + manhattan_distance_heuristic(board) * manhattan_weight + piece_uniformity_heuristic(board) * uniformity_weight
-    
-    return heuristic
 
 def multi_heuristic(heuristics):
     def heuristic(board: BoardState):
         return sum([h(board) * w for h, w in heuristics])
-    
+
     return heuristic
+
 
 def greedy_search(board: BoardState, heuristic):
     setattr(TreeNode, "__lt__", lambda self, other: heuristic(
@@ -178,9 +150,8 @@ def greedy_search(board: BoardState, heuristic):
         node = heapq.heappop(heap)
         visited.add(node.board)
 
-        graphics.draw_board(node.board, graphics.SCREEN)
-        graphics.draw_depth(node.depth(), graphics.SCREEN)
-        pygame.display.flip()
+        if SHOW_SEARCH:
+            draw_search_debug(node, visited, heuristic)
 
         if node.board.is_win():
             return node
@@ -211,14 +182,13 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
 
         for child in node.board.children_without_already_completed():
             if child not in visited and (depth_limit is None or node.depth() + 1 < depth_limit):
-                # WARN: this probably makes the algorithm not optimal but it's faster
                 visited.add(child)
                 heapq.heappush(heap, TreeNode(child, parent=node))
 
     return None
 
 
-def draw_search_debug(node: TreeNode, visited, heuristic=None):
+def draw_search_debug(node: TreeNode, visited=None, heuristic=None):
     graphics.draw_board(node.board, graphics.SCREEN)
     graphics.draw_text("Depth: " + str(node.depth()),
                        graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 0))
@@ -226,6 +196,8 @@ def draw_search_debug(node: TreeNode, visited, heuristic=None):
     if heuristic is not None:
         graphics.draw_text("Heuristic: " + str(heuristic(node.board)),
                            graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 20))
-    graphics.draw_text("Visited: " + str(len(visited)),
-                       graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 40))
+
+    if visited is not None:
+        graphics.draw_text("Visited: " + str(len(visited)),
+                           graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 40))
     pygame.display.flip()

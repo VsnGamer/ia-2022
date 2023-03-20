@@ -47,10 +47,13 @@ def main():
 
     solve_demo()
 
+    # compare_searches(hard_1)
+
 
 def solve_demo():
     while True:
-        solve(BoardState.generate_random(10, 10, div=3.5))
+        solve(BoardState.generate_random(10, 10, div=1.5))
+        # solve(hard_1)
 
 
 def solve(board: BoardState):
@@ -66,10 +69,12 @@ def solve(board: BoardState):
 
     heuristic = search.multi_heuristic([
         (search.pieces_heuristic, 100),
-        (search.manhattan_distance_heuristic, 1),
+        (search.manhattan_distance_heuristic, .5),
+        (search.piece_uniformity_heuristic, 20),
+        # (search.touching_pieces, 1)
     ])
     node = measure_search(lambda: search.a_star(
-        board, heuristic, weight=1.8), "A* (Pieces + Distance + Uniformity)")
+        board, heuristic, weight=1.8), "A* (Pieces + Distance)")
 
     if node is None:
         print("No solution found")
@@ -79,6 +84,10 @@ def solve(board: BoardState):
 
     # wait for click
     while True:
+        graphics.draw_board(node.board, graphics.SCREEN)
+        search.draw_search_debug(node, heuristic=heuristic)
+        pygame.display.flip()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
                 return
@@ -105,16 +114,31 @@ def draw_path(path: list[search.TreeNode], delay=250, heuristic=None):
 
 
 def compare_searches(board: BoardState):
-    measure_search(lambda: search.bfs(board), "BFS")
+    graphics.draw_text("Comparing Searches...", graphics.SCREEN, (0, 0))
+
+    # measure_search(lambda: search.bfs(board), "BFS")
     measure_search(lambda: search.dfs(board), "DFS")
     measure_search(lambda: search.greedy_search(
         board, search.pieces_heuristic), "Greedy")
     measure_search(lambda: search.a_star(
         board, search.pieces_heuristic), "A* (Pieces)")
+
     measure_search(lambda: search.a_star(
-        board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
-    measure_search(lambda: search.a_star(board, search.pieces_and_distance_heuristic,
-                   weight=1.03), "Weighted A* (Pieces + Distance) (1.03x)")
+        board,
+        search.multi_heuristic([
+            (search.pieces_heuristic, 1),
+            (search.manhattan_distance_heuristic, 1)
+        ])
+    ), "A* (Pieces(x1) + Distance(x1))")
+
+    measure_search(lambda: search.a_star(
+        board,
+        search.multi_heuristic([
+            (search.pieces_heuristic, 1),
+            (search.manhattan_distance_heuristic, 1)
+        ]),
+        weight=1.5
+    ), "Weighted A* (1.5x) (Pieces(x1) + Distance(x1)) ")
 
 
 def measure_search(search, name: str):
