@@ -3,7 +3,7 @@ import pygame
 
 SCREEN = pygame.display.set_mode((800, 600))
 X_MARGIN = 120
-Y_MARGIN = 60
+Y_MARGIN = 80
 
 #CELL_SIZE = 35
 

@@ -153,12 +153,20 @@ def same_color_attract_different_color_repel(same_color_weight=1, different_colo
     return heuristic
 
 
-def piece_uniformity_heuristic(multiplier=1):
-    def heuristic(board: BoardState):
-        return sum([piece.uniformity() * multiplier for piece in board.pieces])
+def piece_uniformity_heuristic(board: BoardState):
+    return sum([piece.uniformity2() for piece in board.pieces])
 
+def pieces_distance_uniformity_heuristic(pieces_weight=1, manhattan_weight=1, uniformity_weight=1):
+    def heuristic(board: BoardState):
+        return pieces_heuristic(board) * pieces_weight + manhattan_distance_heuristic(board) * manhattan_weight + piece_uniformity_heuristic(board) * uniformity_weight
+    
     return heuristic
 
+def multi_heuristic(heuristics):
+    def heuristic(board: BoardState):
+        return sum([h(board) * w for h, w in heuristics])
+    
+    return heuristic
 
 def greedy_search(board: BoardState, heuristic):
     setattr(TreeNode, "__lt__", lambda self, other: heuristic(
@@ -201,7 +209,7 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
         if node.board.is_win():
             return node
 
-        for child in node.board.children():
+        for child in node.board.children_without_already_completed():
             if child not in visited and (depth_limit is None or node.depth() + 1 < depth_limit):
                 # WARN: this probably makes the algorithm not optimal but it's faster
                 visited.add(child)

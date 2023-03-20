@@ -57,6 +57,7 @@ def get_position_in_direction(x, y, direction: Direction):
     else:
         raise Exception("Invalid direction")
 
+
 def shift(pos, direction: Direction, amount=1):
     x, y = pos
     if direction == Direction.UP:
@@ -69,6 +70,7 @@ def shift(pos, direction: Direction, amount=1):
         return (x + amount, y)
     else:
         raise Exception("Invalid direction")
+
 
 class Piece:
     def __init__(self, color: Color, positions: set[(int, int)]):
@@ -114,6 +116,22 @@ class Piece:
         side = max(max_x - min_x + 1, max_y - min_y + 1)
 
         return len(self.positions) / (side * side)
+    
+    def uniformity2(self) -> float:
+        min_x = min([x for x, y in self.positions])
+        max_x = max([x for x, y in self.positions])
+        min_y = min([y for x, y in self.positions])
+        max_y = max([y for x, y in self.positions])
+
+        width = abs(max_x - min_x) + 1
+        height = abs(max_y - min_y) + 1
+
+        largest_side = max(width, height)
+
+        if abs(width - height) > 1:
+            return largest_side * largest_side - len(self.positions)
+        else:
+            return largest_side * largest_side - len(self.positions) / 2
 
 
 def merge_same_color_pieces(pieces: set[Piece]):
@@ -191,7 +209,7 @@ class BoardState:
         pieces = set([])
 
         # lets fill about 1/2 of the board with pieces
-        for _ in range(width * height // div):
+        for _ in range(int(width * height / div)):
             x = random.randint(0, width - 1)
             y = random.randint(0, height - 1)
 
@@ -225,6 +243,15 @@ class BoardState:
     def get_num_pieces(self):
         return len(self.pieces)
 
+    def get_num_pieces_predicate(self, predicate):
+        return len([piece for piece in self.pieces if predicate(piece)])
+    
+    def get_num_pieces_of_color(self, color):
+        return self.get_num_pieces_predicate(lambda piece: piece.color == color)
+    
+    def get_color_counts(self):
+        return {color: self.get_num_pieces_of_color(color) for color in self.get_colors()}
+
     def num_piece_cells(self):
         return sum([len(piece.positions) for piece in self.pieces])
 
@@ -253,6 +280,24 @@ class BoardState:
                 if new_state is not None:
                     result.append(new_state)
         return result
+    
+    def children_without_already_completed(self):
+        result = []
+        for piece in self.pieces:
+            if self.get_num_pieces_of_color(piece.color) > 1 or self.is_piece_touching_another(piece):
+                for direction in Direction:
+                    new_state = self.move_piece(piece, direction)
+                    if new_state is not None:
+                        result.append(new_state)
+        return result
+    
+    def is_piece_touching_another(self, piece: Piece) -> bool:
+        for x, y in piece.positions:
+            for direction in Direction:
+                other = self.get_piece(*get_position_in_direction(x, y, direction))
+                if other is not None and other != piece:
+                    return True
+        return False
 
     def is_valid_position(self, x, y):
         return x >= 0 and x < self.width and y >= 0 and y < self.height

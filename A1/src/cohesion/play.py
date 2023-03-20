@@ -12,7 +12,7 @@ def start():
 class Game:
     def __init__(self, board: BoardState = None):
         if board is None:
-            board = BoardState.generate_random(5, 5, div=2)
+            board = BoardState.generate_random(10, 10, div=2)
         self.board = board
         self.selected_piece = None
         self.selected_position = None

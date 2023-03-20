@@ -1,5 +1,5 @@
 from puzzle import BoardState
-from graphics import draw_board, SCREEN
+import graphics
 import search
 import time
 import pygame
@@ -43,16 +43,20 @@ R      RY  R  B R  .
 
 def main():
     pygame.init()
-    play.start()
+    # play.start()
+
+    solve_demo()
+
 
 def solve_demo():
     while True:
-        solve(BoardState.generate_random(10, 10, div=5))
+        solve(BoardState.generate_random(10, 10, div=3.5))
+
 
 def solve(board: BoardState):
     print(board)
 
-    draw_board(board, SCREEN)
+    graphics.draw_board(board, graphics.SCREEN)
     pygame.display.flip()
 
     # node = measure_search(lambda: search.bfs(board), "BFS")
@@ -60,18 +64,24 @@ def solve(board: BoardState):
     # node = measure_search(lambda: search.a_star(
     #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
 
-    manhattan_weight = 1
-    touching_weight = .5
-    heuristic = search.pieces_and_distance_heuristic(manhattan_weight)
-    a_star_weight = 1.8
-    node = measure_search(lambda: search.dfs(board), "DFS")
+    heuristic = search.multi_heuristic([
+        (search.pieces_heuristic, 100),
+        (search.manhattan_distance_heuristic, 1),
+    ])
+    node = measure_search(lambda: search.a_star(
+        board, heuristic, weight=1.8), "A* (Pieces + Distance + Uniformity)")
 
     if node is None:
         print("No solution found")
         return
 
     # draw_path(search.get_path(node), heuristic=heuristic)
-    pygame.time.wait(3000)
+
+    # wait for click
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
+                return
 
 
 def draw_path(path: list[search.TreeNode], delay=250, heuristic=None):
@@ -80,16 +90,15 @@ def draw_path(path: list[search.TreeNode], delay=250, heuristic=None):
             if event.type == pygame.QUIT:
                 return
 
-        draw_board(node.board, SCREEN)
+        graphics.draw_board(node.board, graphics.SCREEN)
         # draw depth text
         text = pygame.font.SysFont("Arial", 20).render(
             f"Depth: {node.depth()}", True, (255, 255, 255))
-        SCREEN.blit(text, (0, 60))
+        graphics.SCREEN.blit(text, (0, 60))
 
         if heuristic is not None:
-            text = pygame.font.SysFont("Arial", 20).render(
-                f"Heuristic: {heuristic(node.board)}", True, (255, 255, 255))
-            SCREEN.blit(text, (0, 80))
+            graphics.draw_text("Heuristic: " + str(heuristic(node.board)),
+                               graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 20))
 
         pygame.display.flip()
         pygame.time.wait(delay)
