@@ -127,8 +127,9 @@ class Piece:
         height = abs(max_y - min_y) + 1
 
         largest_side = max(width, height)
+        smallest_side = min(width, height)
 
-        if abs(width - height) <= 1 and len(self.positions) == largest_side * largest_side:
+        if abs(width - height) <= 1 and len(self.positions) >= smallest_side * smallest_side:
             return 0
 
         return largest_side * largest_side - len(self.positions)
@@ -191,7 +192,7 @@ class BoardState:
     @staticmethod
     def from_string(string):
         lines = string.splitlines()
-        lines = [line.strip() for line in lines if line.strip()]
+        lines = [line for line in lines if line.strip()]
         width = len(lines[0])
         height = len(lines)
         pieces = set([])
@@ -348,7 +349,7 @@ class BoardState:
             str(self.num_piece_cells()) + " cells"
         
         percent_filled = self.num_piece_cells() / (self.width * self.height) * 100
-        result += " ({:.2f}%)".format(percent_filled)
+        result += " ({:.2f}%)\n".format(percent_filled)
         result += "Win: " + str(self.is_win()) + "\n"
         return result
 

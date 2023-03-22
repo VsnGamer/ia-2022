@@ -40,10 +40,22 @@ R      RY  R  B R  .
 .   RBB   Y        .
 """)
 
+hard_big_2 = BoardState.from_string("""
+B GG  RYRB
+R     RBY 
+GG YGY    
+GBR G     
+ RY   G  B
+   BBR    
+GYY  YBY B
+RGRBGG    
+ RYR  RR  
+B      G R
+""")
 
 def main():
     pygame.init()
-    # play.start()
+    # play.start(hard_big_2)
 
     solve_demo()
 
@@ -69,9 +81,9 @@ def solve(board: BoardState):
 
     heuristic = search.multi_heuristic([
         (search.pieces_heuristic, 100),
-        (search.manhattan_distance_heuristic, .5),
-        (search.piece_uniformity_heuristic, 20),
-        # (search.touching_pieces, 1)
+        (search.manhattan_distance_heuristic, 1),
+        (search.piece_uniformity_heuristic, 40),
+        (search.touching_pieces, .5)
     ])
     node = measure_search(lambda: search.a_star(
         board, heuristic, weight=1.8), "A* (Pieces + Distance)")

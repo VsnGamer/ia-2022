@@ -4,8 +4,8 @@ from puzzle import Direction
 import pygame
 
 
-def start():
-    game = Game()
+def start(board: BoardState = None):
+    game = Game(board)
     game.play()
 
 
