@@ -4,7 +4,20 @@ import search
 import time
 import pygame
 import play
+import multiprocessing
 
+easy_1 = BoardState.from_string("""
+    .B.
+    RGR
+    .B.
+""")
+
+medium_1 = BoardState.from_string("""
+    ....
+    GBYB
+    BB.G
+    .R..
+""")
 
 hard_1 = BoardState.from_string("""
         BB.G
@@ -53,13 +66,26 @@ RGRBGG
 B      G R
 """)
 
+medium_big = BoardState.from_string("""
+RR  R              .
+.  Y            R  .
+.   G Y    R G Y   .
+.   G           R R.
+.Y             G   .
+.                 YY
+.     B            Y
+R      R   R  B R  .
+.          R G     .
+.   RB    Y        .
+""")
+
+
 def main():
     pygame.init()
+
     # play.start(hard_big_2)
-
-    solve_demo()
-
-    # compare_searches(hard_1)
+    # solve_demo()
+    compare_searches(medium_big)
 
 
 def solve_demo():
@@ -99,7 +125,7 @@ def solve(board: BoardState):
         graphics.draw_board(node.board, graphics.SCREEN)
         search.draw_search_debug(node, heuristic=heuristic)
         pygame.display.flip()
-        
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
                 return
@@ -126,14 +152,18 @@ def draw_path(path: list[search.TreeNode], delay=250, heuristic=None):
 
 
 def compare_searches(board: BoardState):
-    graphics.draw_text("Comparing Searches...", graphics.SCREEN, (0, 0))
+    # graphics.draw_text("Comparing Searches...", graphics.SCREEN, (0, 0))
+    # pygame.display.flip()
+
+    print("Comparing Board:")
+    print(board)
 
     # measure_search(lambda: search.bfs(board), "BFS")
-    measure_search(lambda: search.dfs(board), "DFS")
-    measure_search(lambda: search.greedy_search(
-        board, search.pieces_heuristic), "Greedy")
-    measure_search(lambda: search.a_star(
-        board, search.pieces_heuristic), "A* (Pieces)")
+    # measure_search(lambda: search.dfs(board), "DFS")
+    # measure_search(lambda: search.greedy_search(
+    # board, search.pieces_heuristic), "Greedy")
+    # measure_search(lambda: search.a_star(
+    #     board, search.pieces_heuristic), "A* (Pieces)")
 
     measure_search(lambda: search.a_star(
         board,
@@ -156,7 +186,7 @@ def compare_searches(board: BoardState):
 def measure_search(search, name: str):
     start = time.time()
     node = search()
-    print("{} took {} seconds".format(name, time.time() - start))
+    print("{} took {:.3f} seconds".format(name, time.time() - start))
     print("Solution @ depth:", node.depth())
     print(node.board)
     print()

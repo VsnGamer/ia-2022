@@ -192,7 +192,7 @@ class BoardState:
     @staticmethod
     def from_string(string):
         lines = string.splitlines()
-        lines = [line for line in lines if line.strip()]
+        lines = [line.strip() for line in lines if line.strip()]
         width = len(lines[0])
         height = len(lines)
         pieces = set([])
