@@ -4,7 +4,6 @@ import search
 import time
 import pygame
 import play
-import multiprocessing
 
 easy_1 = BoardState.from_string("""
     .B.
@@ -81,23 +80,30 @@ R      R   R  B R  .
 
 
 def main():
-    pygame.init()
+    # start_play()
+    solve_demo()
+    # compare_searches(medium_big)
 
-    # play.start(hard_big_2)
-    # solve_demo()
-    compare_searches(medium_big)
+
+def start_play(board: BoardState = None):
+    screen = graphics.init()
+
+    game = play.Game(screen, board)
+    game.play()
 
 
 def solve_demo():
+    screen = graphics.init()
+
     while True:
-        solve(BoardState.generate_random(10, 10, div=1.5))
+        solve(BoardState.generate_random(10, 10, div=1.5), screen)
         # solve(hard_1)
 
 
-def solve(board: BoardState):
+def solve(board: BoardState, screen: pygame.Surface):
     print(board)
 
-    graphics.draw_board(board, graphics.SCREEN)
+    graphics.draw_board(board, screen)
     pygame.display.flip()
 
     # node = measure_search(lambda: search.bfs(board), "BFS")
@@ -106,13 +112,13 @@ def solve(board: BoardState):
     #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
 
     heuristic = search.multi_heuristic([
-        (search.pieces_heuristic, 100),
-        (search.manhattan_distance_heuristic, 1),
-        (search.piece_uniformity_heuristic, 40),
-        (search.touching_pieces, .5)
+        (search.pieces_heuristic, lambda _: 100),
+        (search.manhattan_distance_heuristic, lambda _: .2),
+        (search.piece_uniformity_heuristic, lambda _: 45),
+        # (search.touching_pieces, .5)
     ])
     node = measure_search(lambda: search.a_star(
-        board, heuristic, weight=1.8), "A* (Pieces + Distance)")
+        board, heuristic, weight=1.1, screen=screen), "A* (Pieces + Distance)")
 
     if node is None:
         print("No solution found")
@@ -122,8 +128,8 @@ def solve(board: BoardState):
 
     # wait for click
     while True:
-        graphics.draw_board(node.board, graphics.SCREEN)
-        search.draw_search_debug(node, heuristic=heuristic)
+        graphics.draw_board(node.board, screen)
+        search.draw_search_debug(node, screen, heuristic=heuristic)
         pygame.display.flip()
 
         for event in pygame.event.get():

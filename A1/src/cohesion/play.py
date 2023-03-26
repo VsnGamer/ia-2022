@@ -1,22 +1,18 @@
 from puzzle import BoardState, shift
-from graphics import draw_board, SCREEN, mouse_to_board, board_to_screen, cell_size
+from graphics import draw_board, mouse_to_board, board_to_screen, cell_size
 from puzzle import Direction
 import pygame
 
 
-def start(board: BoardState = None):
-    game = Game(board)
-    game.play()
-
-
 class Game:
-    def __init__(self, board: BoardState = None):
+    def __init__(self, screen: pygame.Surface, board: BoardState = None):
         if board is None:
-            board = BoardState.generate_random(10, 10, div=2)
+            board = BoardState.generate_random(10, 10, div=4)
         self.board = board
         self.selected_piece = None
         self.selected_position = None
         self.paused = False
+        self.screen = screen
 
     def play(self):
         clock = pygame.time.Clock()
@@ -38,7 +34,7 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     self.handle_key(event)
 
-            draw_board(self.board, SCREEN)
+            draw_board(self.board, self.screen)
             self.draw_selected_piece_border()
             pygame.display.update()
 
@@ -54,25 +50,28 @@ class Game:
         self.selected_piece = None
         self.selected_position = None
         self.paused = True
-        self.board = BoardState.generate_random(self.board.width, self.board.height, div=2)
+        # self.board = BoardState.generate_random(
+        #     self.board.width, self.board.height, div=2)
 
     def draw_selected_piece_border(self):
         if self.selected_piece is None:
             return
 
         for x, y in self.selected_piece.positions:
-            bx, by = board_to_screen(self.board, x, y)
-            cs = cell_size(self.board)
+            bx, by = board_to_screen(self.board, x, y, self.screen)
+            cs = cell_size(self.board, self.screen)
             rect = pygame.Rect(bx - 1, by - 1, cs + 2, cs + 2)
             # magenta border
-            pygame.draw.rect(SCREEN, (255, 0, 255), rect, 2)
+            pygame.draw.rect(self.screen, (255, 0, 255), rect, 2)
 
     def handle_click(self, event):
         if self.paused:
+            self.board = BoardState.generate_random(
+                self.board.width, self.board.height, div=4)
             self.paused = False
             return
 
-        x, y = mouse_to_board(self.board, event.pos)
+        x, y = mouse_to_board(self.board, event.pos, self.screen)
         valid = self.board.is_valid_position(x, y)
         print(f"Board[{x}, {y}] (valid: {valid})")
 
@@ -85,7 +84,7 @@ class Game:
             print(f"Selected [{x}, {y}]")
 
     def mouse_direction(self, event):
-        x, y = mouse_to_board(self.board, event.pos)
+        x, y = mouse_to_board(self.board, event.pos, self.screen)
         xi, yi = self.selected_position
 
         dx = x - xi
@@ -93,11 +92,11 @@ class Game:
 
         if dx == 0 and dy == 0:
             return None
-        
+
         if abs(dx) > 0 and abs(dy) > 0:
             # can't move diagonally
             return None
-        
+
         if abs(dx) > 1 or abs(dy) > 1:
             # can't move more than one cell
             return None
@@ -130,16 +129,14 @@ class Game:
     def handle_release(self, event):
         if self.selected_piece is None or self.selected_position is None:
             return
-       
+
         direction = self.mouse_direction(event)
         self.selected_piece = None
         self.selected_position = None
         if direction is None:
             return
-        
+
         self.move_selected_piece(direction)
-        
-        
 
     def handle_key(self, event):
         if event.key == pygame.K_UP:

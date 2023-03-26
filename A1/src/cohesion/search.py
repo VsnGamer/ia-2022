@@ -3,7 +3,7 @@ import graphics
 import pygame
 from puzzle import BoardState, Piece
 
-SHOW_SEARCH = True
+# SHOW_SEARCH = False
 
 
 class TreeNode:
@@ -56,7 +56,7 @@ def bfs(board: BoardState):
     return None
 
 
-def dfs(board: BoardState):
+def dfs(board: BoardState, screen=None):
     stack = [TreeNode(board)]
     visited = set()
 
@@ -64,8 +64,8 @@ def dfs(board: BoardState):
         current = stack.pop()
         visited.add(current.board)
 
-        if SHOW_SEARCH:
-            draw_search_debug(current, visited)
+        if screen is not None:
+            draw_search_debug(current, screen, visited)
 
         if current.board.is_win():
             return current
@@ -79,7 +79,16 @@ def dfs(board: BoardState):
 
 
 def pieces_heuristic(board: BoardState):
-    return board.get_num_pieces() - board.get_num_colors()
+    diff = board.get_num_pieces() - board.get_num_colors()
+
+    if diff < 0:
+        raise ValueError(
+            "Number of pieces cannot be less than number of colors")
+
+    if diff == 0:
+        return int(-1e9)
+
+    return diff
 
 
 def manhattan_distance_piece(piece, other):
@@ -133,16 +142,16 @@ def piece_uniformity_heuristic(board: BoardState):
     return sum([piece.uniformity2() for piece in board.pieces])
 
 
-def multi_heuristic(heuristics):
-    def heuristic(board: BoardState):
-        return sum([h(board) * w for h, w in heuristics])
+def multi_heuristic(heuristics: list[tuple[callable, callable]]):
+    def heuristic(board: BoardState, depth: int):
+        return sum([h(board) * w(depth) for h, w in heuristics])
 
     return heuristic
 
 
-def greedy_search(board: BoardState, heuristic):
-    setattr(TreeNode, "__lt__", lambda self, other: heuristic(
-        self.board) < heuristic(other.board))
+def greedy_search(board: BoardState, heuristic, screen=None):
+    setattr(TreeNode, "__lt__", lambda self, other:
+            heuristic(self.board, self.depth() - 1) < heuristic(other.board, self.depth() - 1))
     heap = [TreeNode(board)]
     visited = set()  # to not visit the same state twice
 
@@ -150,22 +159,22 @@ def greedy_search(board: BoardState, heuristic):
         node = heapq.heappop(heap)
         visited.add(node.board)
 
-        if SHOW_SEARCH:
-            draw_search_debug(node, visited, heuristic)
+        if screen is not None:
+            draw_search_debug(node, screen, visited, heuristic)
 
         if node.board.is_win():
             return node
 
-        for child in node.board.children():
+        for child in node.board.children_without_already_completed():
             if child not in visited:
                 heapq.heappush(heap, TreeNode(child, node))
 
     return None
 
 
-def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
+def a_star(board: BoardState, heuristic, depth_limit=None, weight=1, screen=None):
     setattr(TreeNode, "__lt__", lambda self, other: self.depth() +
-            heuristic(self.board) * weight < other.depth() + heuristic(other.board) * weight)
+            heuristic(self.board, self.depth()) * weight < other.depth() + heuristic(other.board, self.depth()) * weight)
 
     heap = [TreeNode(board)]
     visited = set()  # to not visit the same state twice
@@ -174,8 +183,8 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
         node = heapq.heappop(heap)
         visited.add(node.board)
 
-        if SHOW_SEARCH:
-            draw_search_debug(node, visited, heuristic)
+        if screen is not None:
+            draw_search_debug(node, screen, visited, heuristic)
 
         if node.board.is_win():
             return node
@@ -188,16 +197,16 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1):
     return None
 
 
-def draw_search_debug(node: TreeNode, visited=None, heuristic=None):
-    graphics.draw_board(node.board, graphics.SCREEN)
+def draw_search_debug(node: TreeNode, screen: pygame.Surface, visited=None, heuristic=None):
+    graphics.draw_board(node.board, screen)
     graphics.draw_text("Depth: " + str(node.depth()),
-                       graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 0))
+                       screen, (screen.get_width() - 200, 0))
 
     if heuristic is not None:
-        graphics.draw_text("Heuristic: " + str(heuristic(node.board)),
-                           graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 20))
+        graphics.draw_text("Heuristic: " + str(heuristic(node.board, node.depth())),
+                           screen, (screen.get_width() - 200, 20))
 
     if visited is not None:
         graphics.draw_text("Visited: " + str(len(visited)),
-                           graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 40))
+                           screen, (screen.get_width() - 200, 40))
     pygame.display.flip()

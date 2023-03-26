@@ -129,9 +129,14 @@ class Piece:
         largest_side = max(width, height)
         smallest_side = min(width, height)
 
-        if abs(width - height) <= 1 and len(self.positions) >= smallest_side * smallest_side:
-            return 0
+        # if abs(largest_side - smallest_side) <= 1 and len(self.positions) >= largest_side * smallest_side:
+        #     return 0
 
+        if abs(largest_side - smallest_side) <= 1:
+            if len(self.positions) + 1 >= largest_side * largest_side:
+                return 0
+            return largest_side * smallest_side - len(self.positions)
+        
         return largest_side * largest_side - len(self.positions)
 
 
