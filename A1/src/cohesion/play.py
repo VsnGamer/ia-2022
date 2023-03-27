@@ -1,14 +1,15 @@
 from puzzle import BoardState, shift
 from graphics import draw_board, mouse_to_board, board_to_screen, cell_size
 from puzzle import Direction
+from search import TreeNode
 import pygame
 
 
 class Game:
     def __init__(self, screen: pygame.Surface, board: BoardState = None):
         if board is None:
-            board = BoardState.generate_random(10, 10, div=4)
-        self.board = board
+            board = BoardState.generate_random(10, 10, div=1.5)
+        self.node = TreeNode(board)
         self.selected_piece = None
         self.selected_position = None
         self.paused = False
@@ -34,14 +35,14 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     self.handle_key(event)
 
-            draw_board(self.board, self.screen)
+            draw_board(self.node.board, self.screen)
             self.draw_selected_piece_border()
             pygame.display.update()
 
             if self.paused:
                 continue
 
-            if self.board.is_win():
+            if self.node.board.is_win():
                 self.handle_win()
 
             clock.tick(30)
@@ -58,24 +59,24 @@ class Game:
             return
 
         for x, y in self.selected_piece.positions:
-            bx, by = board_to_screen(self.board, x, y, self.screen)
-            cs = cell_size(self.board, self.screen)
+            bx, by = board_to_screen(self.node.board, x, y, self.screen)
+            cs = cell_size(self.node.board, self.screen)
             rect = pygame.Rect(bx - 1, by - 1, cs + 2, cs + 2)
             # magenta border
             pygame.draw.rect(self.screen, (255, 0, 255), rect, 2)
 
     def handle_click(self, event):
         if self.paused:
-            self.board = BoardState.generate_random(
-                self.board.width, self.board.height, div=4)
+            self.node.board = BoardState.generate_random(
+                self.node.board.width, self.node.board.height, div=4)
             self.paused = False
             return
 
-        x, y = mouse_to_board(self.board, event.pos, self.screen)
-        valid = self.board.is_valid_position(x, y)
+        x, y = mouse_to_board(self.node.board, event.pos, self.screen)
+        valid = self.node.board.is_valid_position(x, y)
         print(f"Board[{x}, {y}] (valid: {valid})")
 
-        piece = self.board.get_piece(x, y)
+        piece = self.node.board.get_piece(x, y)
 
         self.selected_piece = piece
         self.selected_position = (x, y)
@@ -84,7 +85,7 @@ class Game:
             print(f"Selected [{x}, {y}]")
 
     def mouse_direction(self, event):
-        x, y = mouse_to_board(self.board, event.pos, self.screen)
+        x, y = mouse_to_board(self.node.board, event.pos, self.screen)
         xi, yi = self.selected_position
 
         dx = x - xi
@@ -120,11 +121,11 @@ class Game:
         if direction is None:
             return
 
-        new = self.board.move_piece(self.selected_piece, direction)
+        new = self.node.board.move_piece(self.selected_piece, direction)
         if new is not None:
-            self.board = new
+            self.node = TreeNode(new, parent=self.node)
             self.selected_position = shift(self.selected_position, direction)
-            self.selected_piece = self.board.get_piece(*self.selected_position)
+            self.selected_piece = self.node.board.get_piece(*self.selected_position)
 
     def handle_release(self, event):
         if self.selected_piece is None or self.selected_position is None:
@@ -147,13 +148,24 @@ class Game:
             self.move_selected_piece(Direction.LEFT)
         elif event.key == pygame.K_RIGHT:
             self.move_selected_piece(Direction.RIGHT)
+        elif event.key == pygame.K_BACKSPACE:
+            self.undo()
+
+    def undo(self):
+        if self.paused:
+            return
+        if self.node.parent is None:
+            return
+        self.node = self.node.parent
+        self.selected_piece = None
+        self.selected_position = None
 
     def move_selected_piece(self, direction: Direction):
         if self.selected_piece is None:
             return
 
-        new = self.board.move_piece(self.selected_piece, direction)
+        new = self.node.board.move_piece(self.selected_piece, direction)
         if new is not None:
             self.selected_piece = None
             self.selected_position = None
-            self.board = new
+            self.node = TreeNode(new, parent=self.node)

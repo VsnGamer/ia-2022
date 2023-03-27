@@ -80,8 +80,8 @@ R      R   R  B R  .
 
 
 def main():
-    # start_play()
-    solve_demo()
+    start_play()
+    # solve_demo()
     # compare_searches(medium_big)
 
 
