@@ -9,10 +9,8 @@ Y_MARGIN = 80
 def init() -> pygame.Surface:
     pygame.init()
     screen = pygame.display.set_mode((900, 800), pygame.RESIZABLE)
-    # search.SHOW_SEARCH = True
 
     pygame.key.set_repeat(250, 50)
-    print(pygame.key.get_repeat())
 
     return screen
 

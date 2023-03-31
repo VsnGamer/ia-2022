@@ -141,7 +141,6 @@ def touching_pieces(board: BoardState):
 def piece_uniformity_heuristic(board: BoardState):
     return sum([piece.uniformity2() for piece in board.pieces])
 
-
 def multi_heuristic(heuristics: list[tuple[callable, callable]]):
     def heuristic(board: BoardState, depth: int):
         return sum([h(board) * w(depth) for h, w in heuristics])

@@ -80,8 +80,8 @@ R      R   R  B R  .
 
 
 def main():
-    start_play()
-    # solve_demo()
+    # start_play()
+    solve_demo()
     # compare_searches(medium_big)
 
 
@@ -96,7 +96,7 @@ def solve_demo():
     screen = graphics.init()
 
     while True:
-        solve(BoardState.generate_random(10, 10, div=1.5), screen)
+        solve(BoardState.generate_random(20, 10, div=2), screen)
         # solve(hard_1)
 
 
@@ -106,19 +106,14 @@ def solve(board: BoardState, screen: pygame.Surface):
     graphics.draw_board(board, screen)
     pygame.display.flip()
 
-    # node = measure_search(lambda: search.bfs(board), "BFS")
-    # node = measure_search(lambda: search.greedy_search(board,  search.pieces_and_distance_heuristic), "Greedy")
-    # node = measure_search(lambda: search.a_star(
-    #     board, search.pieces_and_distance_heuristic), "A* (Pieces + Distance)")
-
     heuristic = search.multi_heuristic([
         (search.pieces_heuristic, lambda _: 100),
-        (search.manhattan_distance_heuristic, lambda _: .2),
-        (search.piece_uniformity_heuristic, lambda _: 45),
-        # (search.touching_pieces, .5)
+        (search.manhattan_distance_heuristic, lambda _: 1),
+        (search.piece_uniformity_heuristic, lambda _: 25),
+        (search.touching_pieces, lambda _: .7),
     ])
     node = measure_search(lambda: search.a_star(
-        board, heuristic, weight=1.1, screen=screen), "A* (Pieces + Distance)")
+        board, heuristic, weight=1.8, screen=screen), "A* (Pieces(100), Manhattan(1), Uniformity(30))")
 
     if node is None:
         print("No solution found")
