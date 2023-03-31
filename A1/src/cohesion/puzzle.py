@@ -1,6 +1,6 @@
 from enum import Enum
 import random
-from typing import Optional
+from typing import Callable, Optional
 
 
 class Direction(Enum):
@@ -75,13 +75,13 @@ def shift(pos, direction: Direction, amount=1):
 class Piece:
     def __init__(self, color: Color, positions: set[(int, int)]):
         self.color = color
-        self.positions = positions
+        self.positions = frozenset(positions)
 
     def __eq__(self, other):
         return self.color == other.color and self.positions == other.positions
 
     def __hash__(self):
-        return hash((self.color, frozenset(self.positions)))
+        return hash((self.color, self.positions))
 
     def overlaps(self, other) -> bool:
         return len(self.positions & other.positions) > 0
@@ -103,19 +103,6 @@ class Piece:
 
         return Piece(self.color, new_positions)
 
-    def uniformity(self) -> float:
-        # returns a number between 0 and 1, 0 being completely uniform and 1 being completely non-uniform
-        # uniformity is defined as the ratio of the number of positions in the piece to the number of positions in a square bounding box
-
-        min_x = min([x for x, y in self.positions])
-        max_x = max([x for x, y in self.positions])
-        min_y = min([y for x, y in self.positions])
-        max_y = max([y for x, y in self.positions])
-
-        # get largest side to make a square bounding box
-        side = max(max_x - min_x + 1, max_y - min_y + 1)
-
-        return len(self.positions) / (side * side)
     
     def uniformity2(self) -> float:
         min_x = min([x for x, y in self.positions])
@@ -133,7 +120,7 @@ class Piece:
         #     return 0
 
         if abs(largest_side - smallest_side) <= 1:
-            if len(self.positions) + 1 >= largest_side * largest_side:
+            if len(self.positions) >= largest_side * largest_side:
                 return 0
             return largest_side * smallest_side - len(self.positions)
         
@@ -189,7 +176,6 @@ def get_piece(x, y, pieces: set[Piece]) -> Optional[Piece]:
 
     return result[0]
 
-
 class BoardState:
     # Cohesion puzzle board state
 
@@ -232,10 +218,12 @@ class BoardState:
     def __init__(self, width: int, height: int, pieces: set[Piece], check_valid=True):
         self.width = width
         self.height = height
-        self.pieces = pieces
+        self.pieces = frozenset(pieces)
 
         if check_valid and not self.is_valid():
             raise Exception("Invalid board state")
+
+        self.num_colors = len(self.get_colors())
 
     def get_piece(self, x, y):
         return get_piece(x, y, self.pieces)
@@ -244,7 +232,7 @@ class BoardState:
         return set([piece.color for piece in self.pieces])
 
     def get_num_colors(self):
-        return len(self.get_colors())
+        return self.num_colors
 
     def get_num_pieces(self):
         return len(self.pieces)
@@ -255,8 +243,8 @@ class BoardState:
     def get_num_pieces_of_color(self, color):
         return self.get_num_pieces_predicate(lambda piece: piece.color == color)
     
-    def get_color_counts(self):
-        return {color: self.get_num_pieces_of_color(color) for color in self.get_colors()}
+    # def get_color_counts(self):
+    #     return {color: self.get_num_pieces_of_color(color) for color in self.get_colors()}
 
     def num_piece_cells(self):
         return sum([len(piece.positions) for piece in self.pieces])
@@ -278,25 +266,46 @@ class BoardState:
 
         return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces), check_valid=False)
 
-    def children(self):
+    # def children(self):
+    #     result = []
+    #     for piece in self.pieces:
+    #         for direction in Direction:
+    #             new_state = self.move_piece(piece, direction)
+    #             if new_state is not None:
+    #                 result.append(new_state)
+    #     return result
+    
+    # def children_without_already_completed(self):
+    #     result = []
+    #     for piece in self.pieces:
+    #         if self.get_num_pieces_of_color(piece.color) > 1 or self.is_piece_touching_another(piece):
+    #             for direction in Direction:
+    #                 new_state = self.move_piece(piece, direction)
+    #                 if new_state is not None:
+    #                     result.append(new_state)
+    #     return result
+
+    def piece_all_moves(self, piece: Piece):
+        result = []
+        for direction in Direction:
+            new_state = self.move_piece(piece, direction)
+            if new_state is not None:
+                result.append(new_state)
+        return result
+
+    def children_predicate(self, predicate: Callable[['BoardState', Piece], bool] = lambda _: True):
         result = []
         for piece in self.pieces:
-            for direction in Direction:
-                new_state = self.move_piece(piece, direction)
-                if new_state is not None:
-                    result.append(new_state)
+            if predicate(self, piece):
+                result.extend(self.piece_all_moves(piece))
         return result
     
-    def children_without_already_completed(self):
-        result = []
-        for piece in self.pieces:
-            if self.get_num_pieces_of_color(piece.color) > 1 or self.is_piece_touching_another(piece):
-                for direction in Direction:
-                    new_state = self.move_piece(piece, direction)
-                    if new_state is not None:
-                        result.append(new_state)
-        return result
-    
+    def should_move(self, piece: Piece):
+        return self.get_num_pieces_of_color(piece.color) > 1 or self.is_piece_touching_another(piece)
+
+    def num_stuck_pieces(self):
+        return len([piece for piece in self.pieces if len(self.piece_all_moves(piece)) == 0])
+
     def is_piece_touching_another(self, piece: Piece) -> bool:
         for x, y in piece.positions:
             for direction in Direction:
@@ -362,7 +371,7 @@ class BoardState:
         return self.pieces == other.pieces
 
     def __hash__(self):
-        return hash(frozenset(self.pieces))
+        return hash(self.pieces)
 
 # tests
 

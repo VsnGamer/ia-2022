@@ -3,22 +3,21 @@ import graphics
 import pygame
 from puzzle import BoardState, Piece
 
-# SHOW_SEARCH = False
-
 
 class TreeNode:
     def __init__(self, board: BoardState, parent=None):
         self.board = board
         self.parent = parent
+        self._depth = parent.depth() + 1 if parent is not None else 0
 
     def depth(self):
-        depth = 0
-        node = self
-        while node is not None:
-            depth += 1
-            node = node.parent
+        # depth = 0
+        # node = self
+        # while node is not None:
+        #     depth += 1
+        #     node = node.parent
 
-        return depth
+        return self._depth
 
 
 def get_path(node: TreeNode) -> list[TreeNode]:
@@ -109,20 +108,22 @@ def manhattan_distance_piece(piece, other):
 def manhattan_distance(board: BoardState, piece: Piece, same_color: bool):
     result = 0
     for other in board.pieces:
-        if piece != other and (same_color and piece.color == other.color or not same_color and piece.color != other.color):
+        if piece != other and ((same_color and piece.color == other.color) or (not same_color and piece.color != other.color)):
             result += manhattan_distance_piece(piece, other)
 
     return result
 
 
-def manhattan_distance_heuristic(board: BoardState, same_color=True):
-    # manhattan distance of pieces of the same color
-    result = 0
-    for piece in board.pieces:
-        result += manhattan_distance(board, piece, same_color)
+def manhattan_distance_heuristic(same_color=True):
+    def heuristic(board: BoardState):
+        # manhattan distance of pieces of the same color
+        result = 0
+        for piece in board.pieces:
+            result += manhattan_distance(board, piece, same_color)
 
-    return result
+        return result   
 
+    return heuristic
 
 def touching_pieces(board: BoardState):
     # number of pieces that are touching each other (different color)
@@ -188,7 +189,7 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1, screen=None
         if node.board.is_win():
             return node
 
-        for child in node.board.children_without_already_completed():
+        for child in node.board.children_predicate(lambda b, p: b.should_move(p)):
             if child not in visited and (depth_limit is None or node.depth() + 1 < depth_limit):
                 visited.add(child)
                 heapq.heappush(heap, TreeNode(child, parent=node))
