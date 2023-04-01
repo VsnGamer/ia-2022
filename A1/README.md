@@ -68,4 +68,53 @@ In this case, we have 2 blocks of color red, but we can't merge them because the
 
 ## Setup
 
+Install requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the program:
+
+```bash
+python3 main.py
+```
+
+## Usage
+
+You will be presented with a menu with the following options:
+
+```bash
+1. Play
+2. Solve
+```
+
+### Play
+
+This option will let you play the game. You will be presented with a puzzle and you can move the blocks around with the mouse. When you click on a block it will be selected and you can move it by dragging it in the desired direction.
+
+You can also undo your moves by pressing backspace.
+
+### Solve
+
+This option will enter the solver demo mode.
+
+It will ask you some parameters to generate puzzles:
+
+```bash
+Board? (width height div) # Board dimensions and how filled it is, the higher the div the less filled it is
+```
+
+For example, if you enter `4 4 2` it will generate a 4x4 boards with about half of the cells filled.
+
+It will generate and solve the puzzle until it finds a solution. To generate a new puzzle just click anywhere on the screen.
+
+#### Tweaking the solver
+
+You can mess around with the parameters and heuristics in `__main__.py` in the `solve` function.
+
+There is `draw_path` which takes a node(returned by the algorithm) found by the solver and animates the steps taken to reach the solution.
+
+The `measure_search` serves only to measure the time it takes to find a solution and print it to the console, it will return the solution node found by the algorithm.
+
 

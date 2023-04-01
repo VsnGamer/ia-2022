@@ -93,8 +93,18 @@ Y RYGGB Y.
 
 
 def main():
+    while True:
+        print("Play or solve? (p/s)")
+
+        choice = input("> ").lower()
+        if choice == "p":
+            start_play()
+        elif choice == "s":
+            solve_demo()
+        else:
+            print("Invalid choice")
     # start_play()
-    solve_demo()
+    # solve_demo()
     # compare_searches(medium_big)
 
 
@@ -106,14 +116,26 @@ def start_play(board: BoardState = None):
 
 
 def solve_demo():
-    screen = graphics.init()
+    print("Board? (width height div)")
+    print("div will dictate how many pieces will be in the board")
+    print("div 2 will fill about 50% of the board")
+    try:
+        width, height, div = input("> ").split()
+        width, height, div = int(
+            width), int(height), int(div)
 
-    while True:
-        # solve(BoardState.generate_random(20, 10, div=2), screen)
-        solve(hard_big_3, screen)
+        screen = graphics.init()
+        while True:
+            board = BoardState.generate_random(
+                width, height, div)
+            if solve(board, screen):
+                pygame.quit()
+                break
+    except ValueError:
+        print("Invalid input")
 
 
-def solve(board: BoardState, screen: pygame.Surface):
+def solve(board: BoardState, screen: pygame.Surface) -> bool:
     print(board)
 
     graphics.draw_board(board, screen)
@@ -126,44 +148,29 @@ def solve(board: BoardState, screen: pygame.Surface):
         (search.piece_uniformity_heuristic, lambda _: 15),
         # (search.touching_pieces, lambda _: .5),
     ])
-    node = measure_search(lambda: search.a_star(
-        board, heuristic, weight=1.8, screen=screen), "A* (Pieces(x100) + Distance(x1))")
+
+    node = measure_search(
+        lambda: search.a_star(board, heuristic, weight=1.8, screen=screen),
+        "A* (Pieces(x100) + Distance(x1))"
+    )
 
     if node is None:
         print("No solution found")
-        return
 
-    # draw_path(search.get_path(node), heuristic=heuristic)
-
-    # wait for click
-    while True:
+    if node is not None:
+        graphics.draw_path(search.get_path(node), screen, heuristic=heuristic)
         graphics.draw_board(node.board, screen)
         search.draw_search_debug(node, screen, heuristic=heuristic)
         pygame.display.flip()
 
+    # wait for click to continue or backspace to go back
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
-                return
-
-
-def draw_path(path: list[search.TreeNode], delay=250, heuristic=None):
-    for node in path:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return
-
-        graphics.draw_board(node.board, graphics.SCREEN)
-        # draw depth text
-        text = pygame.font.SysFont("Arial", 20).render(
-            f"Depth: {node.depth()}", True, (255, 255, 255))
-        graphics.SCREEN.blit(text, (0, 60))
-
-        if heuristic is not None:
-            graphics.draw_text("Heuristic: " + str(heuristic(node.board)),
-                               graphics.SCREEN, (graphics.SCREEN.get_width() - 200, 20))
-
-        pygame.display.flip()
-        pygame.time.wait(delay)
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
+                    return True
 
 
 def compare_searches(board: BoardState):

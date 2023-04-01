@@ -71,6 +71,26 @@ def draw_board(board: BoardState, screen: pygame.Surface):
     screen.blit(board_properties_text(board), (0, 0))
 
 
+def draw_path(path: list[search.TreeNode], screen: pygame.Surface, delay=250, heuristic=None):
+    for node in path:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+
+        draw_board(node.board, screen)
+        # draw depth text
+        text = pygame.font.SysFont("Arial", 20).render(
+            f"Depth: {node.depth()}", True, (255, 255, 255))
+        screen.blit(text, (0, 60))
+
+        if heuristic is not None:
+            draw_text("Heuristic: " + str(heuristic(node.board, node.depth())),
+                      screen, (screen.get_width() - 200, 20))
+
+        pygame.display.flip()
+        pygame.time.wait(delay)
+
+
 def draw_text(text: str, screen: pygame.Surface, dest):
     font = pygame.font.SysFont("Arial", 20)
     text = font.render(text, True, (255, 255, 255))

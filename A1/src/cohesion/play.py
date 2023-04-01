@@ -9,11 +9,13 @@ class Game:
     def __init__(self, screen: pygame.Surface, board: BoardState = None):
         if board is None:
             board = BoardState.generate_random(10, 10, div=1.5)
+        self.start_board = board
         self.node = TreeNode(board)
         self.selected_piece = None
         self.selected_position = None
         self.paused = False
         self.screen = screen
+        self.quit = False
 
     def play(self):
         clock = pygame.time.Clock()
@@ -35,8 +37,16 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     self.handle_key(event)
 
+            if self.quit:
+                pygame.quit()
+                return
+
             draw_board(self.node.board, self.screen)
             self.draw_selected_piece_border()
+            font = pygame.font.SysFont("Arial", 20)
+            text = font.render(f"Depth/Moves: {self.node.depth()}", True, (255, 255, 255))
+            self.screen.blit(text, (self.screen.get_width() - 200, 0))
+            
             pygame.display.update()
 
             if self.paused:
@@ -150,6 +160,18 @@ class Game:
             self.move_selected_piece(Direction.RIGHT)
         elif event.key == pygame.K_BACKSPACE:
             self.undo()
+        elif event.key == pygame.K_ESCAPE:
+            self.reset()
+
+    def reset(self):
+        if self.node.board == self.start_board:
+            self.quit = True
+            return
+
+        self.node = TreeNode(self.start_board)
+        self.selected_piece = None
+        self.selected_position = None
+        self.paused = False
 
     def undo(self):
         if self.paused:
