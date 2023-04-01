@@ -1,6 +1,6 @@
 from enum import Enum
 import random
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 
 class Direction(Enum):
@@ -11,7 +11,7 @@ class Direction(Enum):
 
 
 class Color(Enum):
-    # ANSI escape codes for colors
+    # ANSI escape codes
     RED = 31
     GREEN = 32
     BLUE = 34
@@ -45,20 +45,7 @@ def parse_color(char: str) -> Color:
         raise Exception("Invalid color char: {}".format(char))
 
 
-def get_position_in_direction(x, y, direction: Direction):
-    if direction == Direction.UP:
-        return (x, y - 1)
-    elif direction == Direction.DOWN:
-        return (x, y + 1)
-    elif direction == Direction.LEFT:
-        return (x - 1, y)
-    elif direction == Direction.RIGHT:
-        return (x + 1, y)
-    else:
-        raise Exception("Invalid direction")
-
-
-def shift(pos, direction: Direction, amount=1):
+def shift_pos(pos: tuple[int, int], direction: Direction, amount: int = 1) -> tuple[int, int]:
     x, y = pos
     if direction == Direction.UP:
         return (x, y - amount)
@@ -90,7 +77,7 @@ class Piece:
         result = set([])
         for x, y in self.positions:
             for direction in Direction:
-                pos = get_position_in_direction(x, y, direction)
+                pos = shift_pos((x, y), direction)
                 if pos not in self.positions:
                     result.add(pos)
         return result
@@ -99,7 +86,7 @@ class Piece:
     def move(self, direction: Direction) -> 'Piece':
         new_positions = set([])
         for x, y in self.positions:
-            new_positions.add(get_position_in_direction(x, y, direction))
+            new_positions.add(shift_pos((x, y), direction))
 
         return Piece(self.color, new_positions)
 
@@ -246,10 +233,10 @@ class BoardState:
     # def get_color_counts(self):
     #     return {color: self.get_num_pieces_of_color(color) for color in self.get_colors()}
 
-    def num_piece_cells(self):
+    def num_piece_cells(self) -> int:
         return sum([len(piece.positions) for piece in self.pieces])
 
-    def is_win(self):
+    def is_win(self) -> bool:
         return self.get_num_pieces() == self.get_num_colors()
 
     def is_in_bounds(self, piece: Piece) -> bool:
@@ -266,26 +253,7 @@ class BoardState:
 
         return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces), check_valid=False)
 
-    # def children(self):
-    #     result = []
-    #     for piece in self.pieces:
-    #         for direction in Direction:
-    #             new_state = self.move_piece(piece, direction)
-    #             if new_state is not None:
-    #                 result.append(new_state)
-    #     return result
-    
-    # def children_without_already_completed(self):
-    #     result = []
-    #     for piece in self.pieces:
-    #         if self.get_num_pieces_of_color(piece.color) > 1 or self.is_piece_touching_another(piece):
-    #             for direction in Direction:
-    #                 new_state = self.move_piece(piece, direction)
-    #                 if new_state is not None:
-    #                     result.append(new_state)
-    #     return result
-
-    def piece_all_moves(self, piece: Piece):
+    def piece_all_moves(self, piece: Piece) -> List['BoardState']:
         result = []
         for direction in Direction:
             new_state = self.move_piece(piece, direction)
@@ -309,7 +277,7 @@ class BoardState:
     def is_piece_touching_another(self, piece: Piece) -> bool:
         for x, y in piece.positions:
             for direction in Direction:
-                other = self.get_piece(*get_position_in_direction(x, y, direction))
+                other = self.get_piece(*shift_pos((x, y), direction))
                 if other is not None and other != piece:
                     return True
         return False
@@ -335,7 +303,7 @@ class BoardState:
         for piece in self.pieces:
             for x, y in piece.positions:
                 for direction in Direction:
-                    pos = get_position_in_direction(x, y, direction)
+                    pos = shift_pos((x, y), direction)
                     other_piece = self.get_piece(*pos)
                     if pos not in piece.positions and other_piece is not None and other_piece.color == piece.color:
                         print("Pieces not connected at ({}, {})".format(x, y))

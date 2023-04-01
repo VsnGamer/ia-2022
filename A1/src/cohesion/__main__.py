@@ -108,8 +108,8 @@ def solve_demo():
     screen = graphics.init()
 
     while True:
-        # solve(BoardState.generate_random(10, 10, div=1.2), screen)
-        solve(hard_big_3, screen)
+        solve(BoardState.generate_random(20, 10, div=3), screen)
+        # solve(hard_big_3, screen)
 
 
 def solve(board: BoardState, screen: pygame.Surface):
@@ -121,8 +121,8 @@ def solve(board: BoardState, screen: pygame.Surface):
     heuristic = search.multi_heuristic([
         (search.pieces_heuristic, lambda _: 100),
         (search.manhattan_distance_heuristic(), lambda _: 1),
-        (search.manhattan_distance_heuristic(same_color=False), lambda _: -.55),
-        (search.piece_uniformity_heuristic, lambda _: 20),
+        # (search.manhattan_distance_heuristic(same_color=False), lambda _: -.2),
+        (search.piece_uniformity_heuristic, lambda _: 15),
         # (search.touching_pieces, lambda _: 1),
     ])
     node = measure_search(lambda: search.a_star(

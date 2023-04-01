@@ -1,4 +1,4 @@
-from puzzle import BoardState, shift
+from puzzle import BoardState, shift_pos
 from graphics import draw_board, mouse_to_board, board_to_screen, cell_size
 from puzzle import Direction
 from search import TreeNode
@@ -124,7 +124,7 @@ class Game:
         new = self.node.board.move_piece(self.selected_piece, direction)
         if new is not None:
             self.node = TreeNode(new, parent=self.node)
-            self.selected_position = shift(self.selected_position, direction)
+            self.selected_position = shift_pos(self.selected_position, direction)
             self.selected_piece = self.node.board.get_piece(*self.selected_position)
 
     def handle_release(self, event):
