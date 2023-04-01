@@ -11,12 +11,6 @@ class TreeNode:
         self._depth = parent.depth() + 1 if parent is not None else 0
 
     def depth(self):
-        # depth = 0
-        # node = self
-        # while node is not None:
-        #     depth += 1
-        #     node = node.parent
-
         return self._depth
 
 
@@ -196,6 +190,32 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1, screen=None
 
     return None
 
+def beam_search(board: BoardState, heuristic, beam_width=3, depth_limit=None, weight=1, screen=None):
+    setattr(TreeNode, "__lt__", lambda self, other: self.depth() +
+            heuristic(self.board, self.depth()) * weight < other.depth() + heuristic(other.board, self.depth()) * weight)
+
+    heap = [TreeNode(board)]
+    visited = set()  # to not visit the same state twice
+
+    while heap:
+        node = heapq.heappop(heap)
+        visited.add(node.board)
+
+        if screen is not None:
+            draw_search_debug(node, screen, visited, heuristic)
+
+        if node.board.is_win():
+            return node
+
+        for child in node.board.children_predicate(lambda b, p: b.should_move(p)):
+            if child not in visited and (depth_limit is None or node.depth() + 1 < depth_limit):
+                visited.add(child)
+                heapq.heappush(heap, TreeNode(child, parent=node))
+
+        if len(heap) > beam_width:
+            heap = heap[:beam_width]
+
+    return None
 
 def draw_search_debug(node: TreeNode, screen: pygame.Surface, visited=None, heuristic=None):
     graphics.draw_board(node.board, screen)

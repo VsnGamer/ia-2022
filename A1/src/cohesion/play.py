@@ -73,7 +73,7 @@ class Game:
             return
 
         x, y = mouse_to_board(self.node.board, event.pos, self.screen)
-        valid = self.node.board.is_valid_position(x, y)
+        valid = self.node.board.is_pos_in_bounds(x, y)
         print(f"Board[{x}, {y}] (valid: {valid})")
 
         piece = self.node.board.get_piece(x, y)

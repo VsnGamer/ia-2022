@@ -1,6 +1,6 @@
 from enum import Enum
 import random
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 
 class Direction(Enum):
@@ -29,20 +29,20 @@ class Color(Enum):
         else:
             raise Exception("Invalid color")
 
+    @staticmethod
+    def parse_color(char: str) -> 'Color':
+        # parse color from chars R G B Y
 
-def parse_color(char: str) -> Color:
-    # parse color from chars R G B Y
-
-    if char == 'R':
-        return Color.RED
-    elif char == 'G':
-        return Color.GREEN
-    elif char == 'B':
-        return Color.BLUE
-    elif char == 'Y':
-        return Color.YELLOW
-    else:
-        raise Exception("Invalid color char: {}".format(char))
+        if char == 'R':
+            return Color.RED
+        elif char == 'G':
+            return Color.GREEN
+        elif char == 'B':
+            return Color.BLUE
+        elif char == 'Y':
+            return Color.YELLOW
+        else:
+            raise Exception("Invalid color char: {}".format(char))
 
 
 def shift_pos(pos: tuple[int, int], direction: Direction, amount: int = 1) -> tuple[int, int]:
@@ -90,7 +90,6 @@ class Piece:
 
         return Piece(self.color, new_positions)
 
-    
     def uniformity2(self) -> float:
         min_x = min([x for x, y in self.positions])
         max_x = max([x for x, y in self.positions])
@@ -110,7 +109,7 @@ class Piece:
             if len(self.positions) >= largest_side * largest_side:
                 return 0
             return largest_side * smallest_side - len(self.positions)
-        
+
         return largest_side * largest_side - len(self.positions)
 
 
@@ -163,6 +162,7 @@ def get_piece(x, y, pieces: set[Piece]) -> Optional[Piece]:
 
     return result[0]
 
+
 class BoardState:
     # Cohesion puzzle board state
 
@@ -177,7 +177,7 @@ class BoardState:
         for y, line in enumerate(lines):
             for x, char in enumerate(line):
                 if char != '.' and char != ' ':
-                    color = parse_color(char)
+                    color = Color.parse_color(char)
                     piece = Piece(color, set([(x, y)]))
                     pieces.add(piece)
 
@@ -226,10 +226,10 @@ class BoardState:
 
     def get_num_pieces_predicate(self, predicate):
         return len([piece for piece in self.pieces if predicate(piece)])
-    
+
     def get_num_pieces_of_color(self, color):
         return self.get_num_pieces_predicate(lambda piece: piece.color == color)
-    
+
     # def get_color_counts(self):
     #     return {color: self.get_num_pieces_of_color(color) for color in self.get_colors()}
 
@@ -239,12 +239,12 @@ class BoardState:
     def is_win(self) -> bool:
         return self.get_num_pieces() == self.get_num_colors()
 
-    def is_in_bounds(self, piece: Piece) -> bool:
-        return all([self.is_valid_position(x, y) for x, y in piece.positions])
+    def is_piece_in_bounds(self, piece: Piece) -> bool:
+        return all([self.is_pos_in_bounds(x, y) for x, y in piece.positions])
 
     def move_piece(self, piece: Piece, direction: Direction) -> Optional['BoardState']:
         new_piece = piece.move(direction)
-        if not self.is_in_bounds(new_piece):
+        if not self.is_piece_in_bounds(new_piece):
             return None
 
         new_pieces = self.pieces - set([piece]) | set([new_piece])
@@ -253,7 +253,7 @@ class BoardState:
 
         return BoardState(self.width, self.height, merge_same_color_pieces(new_pieces), check_valid=False)
 
-    def piece_all_moves(self, piece: Piece) -> List['BoardState']:
+    def piece_all_moves(self, piece: Piece) -> list['BoardState']:
         result = []
         for direction in Direction:
             new_state = self.move_piece(piece, direction)
@@ -267,7 +267,7 @@ class BoardState:
             if predicate(self, piece):
                 result.extend(self.piece_all_moves(piece))
         return result
-    
+
     def should_move(self, piece: Piece):
         return self.get_num_pieces_of_color(piece.color) > 1 or self.is_piece_touching_another(piece)
 
@@ -282,13 +282,13 @@ class BoardState:
                     return True
         return False
 
-    def is_valid_position(self, x, y):
+    def is_pos_in_bounds(self, x, y):
         return x >= 0 and x < self.width and y >= 0 and y < self.height
 
     def is_valid(self):
         for piece in self.pieces:
             for x, y in piece.positions:
-                if not self.is_valid_position(x, y):
+                if not self.is_pos_in_bounds(x, y):
                     print("Invalid position: ({}, {})".format(x, y))
                     return False
 
@@ -329,7 +329,7 @@ class BoardState:
         result += str(self.get_num_colors()) + " colors, " + \
             str(self.get_num_pieces()) + " pieces, " + \
             str(self.num_piece_cells()) + " cells"
-        
+
         percent_filled = self.num_piece_cells() / (self.width * self.height) * 100
         result += " ({:.2f}%)\n".format(percent_filled)
         result += "Win: " + str(self.is_win()) + "\n"

@@ -91,6 +91,7 @@ G   BGRB B
 Y RYGGB Y.
 """)
 
+
 def main():
     # start_play()
     solve_demo()
@@ -108,8 +109,8 @@ def solve_demo():
     screen = graphics.init()
 
     while True:
-        solve(BoardState.generate_random(20, 10, div=3), screen)
-        # solve(hard_big_3, screen)
+        # solve(BoardState.generate_random(20, 10, div=2), screen)
+        solve(hard_big_3, screen)
 
 
 def solve(board: BoardState, screen: pygame.Surface):
@@ -123,10 +124,10 @@ def solve(board: BoardState, screen: pygame.Surface):
         (search.manhattan_distance_heuristic(), lambda _: 1),
         # (search.manhattan_distance_heuristic(same_color=False), lambda _: -.2),
         (search.piece_uniformity_heuristic, lambda _: 15),
-        # (search.touching_pieces, lambda _: 1),
+        # (search.touching_pieces, lambda _: .5),
     ])
     node = measure_search(lambda: search.a_star(
-        board, heuristic, weight=1.5,screen=screen), "A* (Pieces(100), Distance(1), Uniformity(10))")
+        board, heuristic, weight=1.8, screen=screen), "A* (Pieces(x100) + Distance(x1))")
 
     if node is None:
         print("No solution found")
@@ -197,9 +198,13 @@ def compare_searches(board: BoardState):
     ), "Weighted A* (1.5x) (Pieces(x1) + Distance(x1)) ")
 
 
-def measure_search(search, name: str):
+def measure_search(search, name: str) -> search.TreeNode:
     start = time.time()
+
     node = search()
+    if node is None:
+        return None
+
     print("{} took {:.3f} seconds".format(name, time.time() - start))
     print("Solution @ depth:", node.depth())
     print(node.board)
