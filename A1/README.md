@@ -77,7 +77,7 @@ pip install -r requirements.txt
 Run the program:
 
 ```bash
-python3 main.py
+python3 cohesion
 ```
 
 ## Usage

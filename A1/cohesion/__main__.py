@@ -162,7 +162,7 @@ def start_play(screen: pygame.Surface, board: BoardState = None):
 def solve_demo(screen: pygame.Surface):
     while True:
         board = BoardState.generate_random(
-            15, 15, 4)
+            10, 10, 2)
         if solve(board, screen):
             break
 
@@ -177,12 +177,12 @@ def solve(board: BoardState, screen: pygame.Surface) -> bool:
         (search.pieces_heuristic, lambda _: 100),
         (search.manhattan_distance_heuristic(), lambda _: 1),
         # (search.manhattan_distance_heuristic(same_color=False), lambda _: -.2),
-        # (search.piece_uniformity_heuristic, lambda _: 15),
+        (search.piece_uniformity_heuristic, lambda _: 15),
         # (search.touching_pieces, lambda _: .5),
     ])
 
     node = measure_search(
-        lambda: search.a_star(board, heuristic, weight=1.8, screen=screen),
+        lambda: search.a_star(board, heuristic, weight=50, screen=screen),
         "Weighted A*(x1.8) (Pieces(x100) + Distance(x1) + Uniformity(x5))",
     )
 

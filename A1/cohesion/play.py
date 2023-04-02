@@ -163,6 +163,10 @@ class Game:
             self.reset()
 
     def reset(self):
+        if self.paused:
+            self.paused = False
+            return
+        
         if self.node.board == self.start_board:
             self.quit = True
             return
