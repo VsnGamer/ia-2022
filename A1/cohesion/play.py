@@ -38,7 +38,6 @@ class Game:
                     self.handle_key(event)
 
             if self.quit:
-                pygame.quit()
                 return
 
             draw_board(self.node.board, self.screen)
@@ -83,16 +82,16 @@ class Game:
             return
 
         x, y = mouse_to_board(self.node.board, event.pos, self.screen)
-        valid = self.node.board.is_pos_in_bounds(x, y)
-        print(f"Board[{x}, {y}] (valid: {valid})")
+        # valid = self.node.board.is_pos_in_bounds(x, y)
+        # print(f"Board[{x}, {y}] (valid: {valid})")
 
         piece = self.node.board.get_piece(x, y)
 
         self.selected_piece = piece
         self.selected_position = (x, y)
 
-        if piece is not None:
-            print(f"Selected [{x}, {y}]")
+        # if piece is not None:
+        #     print(f"Selected [{x}, {y}]")
 
     def mouse_direction(self, event):
         x, y = mouse_to_board(self.node.board, event.pos, self.screen)

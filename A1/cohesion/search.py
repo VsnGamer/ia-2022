@@ -58,7 +58,8 @@ def dfs(board: BoardState, screen=None):
         visited.add(current.board)
 
         if screen is not None:
-            draw_search_debug(current, screen, visited)
+            if draw_search_debug(current, screen, visited):
+                return None
 
         if current.board.is_win():
             return current
@@ -115,9 +116,10 @@ def manhattan_distance_heuristic(same_color=True):
         for piece in board.pieces:
             result += manhattan_distance(board, piece, same_color)
 
-        return result   
+        return result
 
     return heuristic
+
 
 def touching_pieces(board: BoardState):
     # number of pieces that are touching each other (different color)
@@ -135,6 +137,7 @@ def touching_pieces(board: BoardState):
 
 def piece_uniformity_heuristic(board: BoardState):
     return sum([piece.uniformity2() for piece in board.pieces])
+
 
 def multi_heuristic(heuristics: list[tuple[callable, callable]]):
     def heuristic(board: BoardState, depth: int):
@@ -154,7 +157,8 @@ def greedy_search(board: BoardState, heuristic, screen=None):
         visited.add(node.board)
 
         if screen is not None:
-            draw_search_debug(node, screen, visited, heuristic)
+            if draw_search_debug(node, screen, visited, heuristic):
+                return None
 
         if node.board.is_win():
             return node
@@ -178,7 +182,8 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1, screen=None
         visited.add(node.board)
 
         if screen is not None:
-            draw_search_debug(node, screen, visited, heuristic)
+            if draw_search_debug(node, screen, visited, heuristic):
+                return None
 
         if node.board.is_win():
             return node
@@ -189,6 +194,7 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1, screen=None
                 heapq.heappush(heap, TreeNode(child, parent=node))
 
     return None
+
 
 def beam_search(board: BoardState, heuristic, beam_width=3, depth_limit=None, weight=1, screen=None):
     setattr(TreeNode, "__lt__", lambda self, other: self.depth() +
@@ -202,7 +208,8 @@ def beam_search(board: BoardState, heuristic, beam_width=3, depth_limit=None, we
         visited.add(node.board)
 
         if screen is not None:
-            draw_search_debug(node, screen, visited, heuristic)
+            if draw_search_debug(node, screen, visited, heuristic):
+                return None
 
         if node.board.is_win():
             return node
@@ -217,7 +224,21 @@ def beam_search(board: BoardState, heuristic, beam_width=3, depth_limit=None, we
 
     return None
 
-def draw_search_debug(node: TreeNode, screen: pygame.Surface, visited=None, heuristic=None):
+
+def draw_search_debug(node: TreeNode, screen: pygame.Surface, visited=None, heuristic=None) -> bool:
+    for event in pygame.event.get():
+        cancel = False
+        if event.type == pygame.QUIT:
+            cancel = True
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                cancel = True
+
+        if cancel:
+            graphics.draw_text("Cancelled", screen,
+                               (screen.get_width() // 2 - 50, 20))
+            return True
+
     graphics.draw_board(node.board, screen)
     graphics.draw_text("Depth: " + str(node.depth()),
                        screen, (screen.get_width() - 200, 0))
@@ -230,3 +251,5 @@ def draw_search_debug(node: TreeNode, screen: pygame.Surface, visited=None, heur
         graphics.draw_text("Visited: " + str(len(visited)),
                            screen, (screen.get_width() - 200, 40))
     pygame.display.flip()
+
+    return False

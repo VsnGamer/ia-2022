@@ -99,15 +99,9 @@ You can also undo your moves by pressing backspace.
 
 This option will enter the solver demo mode.
 
-It will ask you some parameters to generate puzzles:
+It will generate and solve the puzzle until it finds a solution or you can press escape to cancel the search.
 
-```bash
-Board? (width height div) # Board dimensions and how filled it is, the higher the div the less filled it is
-```
-
-For example, if you enter `4 4 2` it will generate a 4x4 boards with about half of the cells filled.
-
-It will generate and solve the puzzle until it finds a solution. To generate a new puzzle just click anywhere on the screen.
+To generate a new puzzle just click anywhere on the screen.
 
 #### Tweaking the solver
 

@@ -1,6 +1,6 @@
 from enum import Enum
-import random
 from typing import Callable, Optional
+import random
 
 
 class Direction(Enum):
@@ -117,9 +117,11 @@ def merge_same_color_pieces(pieces: set[Piece]):
     # create a new set of pieces by merging pieces of the same color that are touching
 
     # visit each piece and merge it with any pieces that are connected to it
-    new_pieces_merged = set([])
     visited = set([])
-    for piece in pieces:
+    pos_piece_map = build_pos_piece_map(pieces)
+    pieces.clear()
+
+    for piece in pos_piece_map.values():
         if piece in visited:
             continue
 
@@ -128,7 +130,7 @@ def merge_same_color_pieces(pieces: set[Piece]):
         to_visit = piece.get_neighbour_positions()
         while len(to_visit) > 0:
             x, y = to_visit.pop()
-            connected_piece = get_piece(x, y, pieces)
+            connected_piece = pos_piece_map.get((x, y))
             if connected_piece is not None and connected_piece not in connected_pieces and connected_piece.color == piece.color:
                 connected_pieces.add(connected_piece)
                 to_visit |= connected_piece.get_neighbour_positions()
@@ -138,9 +140,9 @@ def merge_same_color_pieces(pieces: set[Piece]):
         for connected_piece in connected_pieces:
             new_positions |= connected_piece.positions
             visited.add(connected_piece)
-        new_pieces_merged.add(Piece(piece.color, new_positions))
+        pieces.add(Piece(piece.color, new_positions))
 
-    return new_pieces_merged
+    return frozenset(pieces)
 
 
 def any_overlaps(pieces: set[Piece]):
@@ -161,6 +163,17 @@ def get_piece(x, y, pieces: set[Piece]) -> Optional[Piece]:
         raise Exception("Multiple pieces at ({}, {})".format(x, y))
 
     return result[0]
+
+
+def build_pos_piece_map(pieces: frozenset[Piece]) -> dict[(int, int), Piece]:
+    result = {}
+    for piece in pieces:
+        for pos in piece.positions:
+            if pos in result:
+                raise Exception(
+                    "Multiple pieces at ({}, {})".format(pos[0], pos[1]))
+            result[pos] = piece
+    return result
 
 
 class BoardState:
@@ -202,18 +215,21 @@ class BoardState:
 
         return BoardState(width, height, merge_same_color_pieces(pieces))
 
-    def __init__(self, width: int, height: int, pieces: set[Piece], check_valid=True):
+    def __init__(self, width: int, height: int, pieces: frozenset[Piece], check_valid=True):
         self.width = width
         self.height = height
-        self.pieces = frozenset(pieces)
+        self.pieces = pieces
+
+        # this should speed up get_piece
+        self.pos_piece_map = build_pos_piece_map(self.pieces)
 
         if check_valid and not self.is_valid():
             raise Exception("Invalid board state")
 
         self.num_colors = len(self.get_colors())
 
-    def get_piece(self, x, y):
-        return get_piece(x, y, self.pieces)
+    def get_piece(self, x, y) -> Optional[Piece]:
+        return self.pos_piece_map.get((x, y), None)
 
     def get_colors(self):
         return set([piece.color for piece in self.pieces])
@@ -247,7 +263,7 @@ class BoardState:
         if not self.is_piece_in_bounds(new_piece):
             return None
 
-        new_pieces = self.pieces - set([piece]) | set([new_piece])
+        new_pieces = set(self.pieces) - set([piece]) | set([new_piece])
         if any_overlaps(new_pieces):
             return None
 
