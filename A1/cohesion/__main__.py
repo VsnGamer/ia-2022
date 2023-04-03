@@ -108,8 +108,11 @@ B R  B RYB
 
 def main():
     screen = graphics.init()
+
+    logo = pygame.image.load(os.path.join(
+        os.path.dirname(__file__), "..", "logo.webp")
+    )
     
-    logo = pygame.image.load(os.path.join(os.path.dirname(__file__), "..", "logo.webp"))
     play_btn = graphics.Button("Play",  (200, 50))
     solve_btn = graphics.Button("Solve", (200, 50))
 
@@ -161,8 +164,7 @@ def start_play(screen: pygame.Surface, board: BoardState = None):
 
 def solve_demo(screen: pygame.Surface):
     while True:
-        board = BoardState.generate_random(
-            10, 10, 2)
+        board = BoardState.generate_random(10, 10, 1.5)
         if solve(board, screen):
             break
 
@@ -176,9 +178,9 @@ def solve(board: BoardState, screen: pygame.Surface) -> bool:
     heuristic = search.multi_heuristic([
         (search.pieces_heuristic, lambda _: 100),
         (search.manhattan_distance_heuristic(), lambda _: 1),
-        # (search.manhattan_distance_heuristic(same_color=False), lambda _: -.2),
+        (search.manhattan_distance_heuristic(same_color=False), lambda _: -.2),
         (search.piece_uniformity_heuristic, lambda _: 25),
-        (search.touching_pieces, lambda _: .5),
+        # (search.touching_pieces, lambda _: .5),
     ])
 
     node = measure_search(
@@ -203,6 +205,8 @@ def solve(board: BoardState, screen: pygame.Surface) -> bool:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE or event.key == pygame.K_ESCAPE:
                     return True
+
+        pygame.time.wait(100)
 
 
 def compare_searches(board: BoardState):
