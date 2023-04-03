@@ -70,7 +70,7 @@ def draw_board(board: BoardState, screen: pygame.Surface):
     board_properties_text(board, screen)
 
 
-def draw_path(path: list[search.TreeNode], screen: pygame.Surface, delay=250, heuristic=None):
+def draw_path(path: list[search.TreeNode], screen: pygame.Surface, time: float, delay=250, heuristic=None):
     for node in path:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -85,8 +85,12 @@ def draw_path(path: list[search.TreeNode], screen: pygame.Surface, delay=250, he
         screen.blit(text, (screen.get_width() - 200, 0))
 
         text = pygame.font.SysFont("Arial", 20).render(
-            f"Animating... ESC to skip", True, (255, 255, 255))
+            f"Took {time:.2f} seconds", True, (255, 255, 255))
         screen.blit(text, (screen.get_width() // 2 - text.get_width() // 2, 0))
+
+        text = pygame.font.SysFont("Arial", 20).render(
+            f"Animating... ESC to skip", True, (255, 255, 255))
+        screen.blit(text, (screen.get_width() // 2 - text.get_width() // 2, 20))
 
         if heuristic is not None:
             draw_text("Heuristic: " + str(heuristic(node.board, node.depth())),

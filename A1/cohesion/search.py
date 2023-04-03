@@ -175,11 +175,11 @@ def a_star(board: BoardState, heuristic, depth_limit=None, weight=1, screen=None
             heuristic(self.board, self.depth()) * weight < other.depth() + heuristic(other.board, self.depth()) * weight)
 
     heap = [TreeNode(board)]
-    visited = set()  # to not visit the same state twice
+    visited = set([board])  # to not visit the same state twice
 
     while heap:
         node = heapq.heappop(heap)
-        visited.add(node.board)
+        # visited.add(node.board)
 
         if screen is not None:
             if draw_search_debug(node, screen, visited, heuristic):

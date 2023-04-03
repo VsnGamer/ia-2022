@@ -1,4 +1,7 @@
-# IART Assignment 1 - **Cohesion** puzzle 
+# IART Assignment 1
+
+<img src="logo.webp" alt="Cohesion" style="display: block; margin: auto;"/>
+<h1 style="text-align: center;">Cohesion</h1>
 
 ## Summary
 

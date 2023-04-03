@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from puzzle import BoardState
 import graphics
 import search
@@ -164,7 +165,7 @@ def start_play(screen: pygame.Surface, board: BoardState = None):
 
 def solve_demo(screen: pygame.Surface):
     while True:
-        board = BoardState.generate_random(10, 10, 1.5)
+        board = BoardState.generate_random(10, 10, 2)
         if solve(board, screen):
             break
 
@@ -179,20 +180,20 @@ def solve(board: BoardState, screen: pygame.Surface) -> bool:
         (search.pieces_heuristic, lambda _: 100),
         (search.manhattan_distance_heuristic(), lambda _: 1),
         (search.manhattan_distance_heuristic(same_color=False), lambda _: -.2),
-        (search.piece_uniformity_heuristic, lambda _: 25),
+        (search.piece_uniformity_heuristic, lambda _: 15),
         # (search.touching_pieces, lambda _: .5),
     ])
 
-    node = measure_search(
+    res = measure_search(
         lambda: search.a_star(board, heuristic, weight=1.8, screen=screen),
-        "Weighted A*(x1.8) (Pieces(x100) + Distance(x1) + Uniformity(x5))",
+        "Weighted A*(x1.8) (Pieces(x100) + Distance(x1) + Repel(x-.2) + Uniformity(x20))",
     )
 
-    if node is None:
+    if res is None:
         print("No solution found")
-
-    if node is not None:
-        graphics.draw_path(search.get_path(node), screen, heuristic=heuristic)
+    else:
+        node, time = res
+        graphics.draw_path(search.get_path(node), screen, time, heuristic=heuristic)
         graphics.draw_board(node.board, screen)
         search.draw_search_debug(node, screen, heuristic=heuristic)
     pygame.display.flip()
@@ -241,19 +242,21 @@ def compare_searches(board: BoardState):
     ), "Weighted A* (1.5x) (Pieces(x1) + Distance(x1)) ")
 
 
-def measure_search(search, name: str) -> search.TreeNode:
+def measure_search(search, name: str) -> Optional[tuple[search.TreeNode, float]]:
     start = time.time()
 
     node = search()
     if node is None:
         return None
+    
+    duration = time.time() - start
 
-    print("{} took {:.3f} seconds".format(name, time.time() - start))
+    print("{} took {:.3f} seconds".format(name, duration))
     print("Solution @ depth:", node.depth())
     print(node.board)
     print()
 
-    return node
+    return node, duration
 
 
 if __name__ == "__main__":
