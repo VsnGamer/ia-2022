@@ -41,7 +41,7 @@ hard_3 = BoardState.from_string("""
         BRBG
 """)
 
-hard_big_1 = BoardState.from_string("""
+easy_big_1 = BoardState.from_string("""
 RR  R        Y     .
 .  Y            R  .
 .   G Y B  R G Y   .
@@ -194,8 +194,6 @@ def solve(board: BoardState, screen: pygame.Surface) -> bool:
     else:
         node, time = res
         graphics.draw_path(search.get_path(node), screen, time, heuristic=heuristic)
-        graphics.draw_board(node.board, screen)
-        search.draw_search_debug(node, screen, heuristic=heuristic)
     pygame.display.flip()
 
     # wait for click to continue or backspace/esc to go back
