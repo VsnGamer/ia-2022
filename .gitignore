@@ -1,2 +1,4 @@
 .vscode
 *.zip
+
+.DS_Store
